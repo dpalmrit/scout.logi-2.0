@@ -44,25 +44,15 @@ export default function Hero() {
         <div className="flex gap-4 flex-wrap mb-10">
           <a
             href="https://pitchscout.ai/coach-register"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded font-bold text-sm tracking-wide uppercase transition-all duration-300 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: '#00e676', color: '#080f0a', boxShadow: '0 0 0 rgba(0,230,118,0)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 22px rgba(0,230,118,0.22)' }}
-            onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 0 0 rgba(0,230,118,0)' }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded font-bold text-sm tracking-wide uppercase bg-[#00e676] text-[#080f0a] transition-all duration-300 hover:bg-[#26f078] hover:-translate-y-[1px] active:scale-[0.98]"
+            style={{ textDecoration: 'none' }}
           >
             For coaches <ArrowRight size={15} weight="bold" />
           </a>
           <a
             href="#how"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded font-semibold text-sm tracking-wide uppercase border transition-all duration-300"
-            style={{ color: '#e8f5ec', borderColor: 'rgba(255,255,255,0.14)', textDecoration: 'none' }}
-            onMouseEnter={e => {
-              e.currentTarget.style.color = '#00e676'
-              e.currentTarget.style.borderColor = 'rgba(0,230,118,0.35)'
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.color = '#e8f5ec'
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'
-            }}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded font-semibold text-sm tracking-wide uppercase border transition-all duration-300 text-[#e8f5ec] border-[rgba(255,255,255,0.14)] hover:text-[#00e676] hover:border-[rgba(0,230,118,0.35)]"
+            style={{ textDecoration: 'none' }}
           >
             How it works
           </a>

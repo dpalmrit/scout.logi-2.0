@@ -100,10 +100,7 @@ export default function SampleAnalysis() {
             {metrics.map(m => (
               <div
                 key={m.name}
-                className="px-5 py-6 text-center transition-colors duration-200 cursor-default"
-                style={{ background: '#0d1a10' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = '#122018' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = '#0d1a10' }}
+                className="px-5 py-6 text-center transition-colors duration-200 cursor-default bg-[#0d1a10] hover:bg-[#122018]"
               >
                 <div className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: '#7a9982' }}>{m.name}</div>
                 <div className="text-3xl font-extrabold leading-none mb-1" style={{ color: '#00e676' }}>
@@ -155,10 +152,8 @@ export default function SampleAnalysis() {
           <div className="text-center">
             <a
               href="https://pitchscout.ai/coach-register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 hover:-translate-y-[1px] active:scale-[0.98]"
-              style={{ background: '#00e676', color: '#080f0a', textDecoration: 'none' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 22px rgba(0,230,118,0.22)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none' }}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 bg-[#00e676] text-[#080f0a] hover:bg-[#26f078] hover:-translate-y-[1px] active:scale-[0.98]"
+              style={{ textDecoration: 'none' }}
             >
               Get this for your team
             </a>

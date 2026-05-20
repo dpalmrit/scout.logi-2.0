@@ -29,10 +29,8 @@ export default function EarlyAccess() {
               </p>
               <a
                 href="https://pitchscout.ai/coach-register"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 hover:-translate-y-[1px] active:scale-[0.98]"
-                style={{ background: '#00e676', color: '#080f0a', textDecoration: 'none' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = '0 6px 22px rgba(0,230,118,0.22)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.boxShadow = 'none' }}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 bg-[#00e676] text-[#080f0a] hover:bg-[#26f078] hover:-translate-y-[1px] active:scale-[0.98]"
+                style={{ textDecoration: 'none' }}
               >
                 Request access <ArrowRight size={15} weight="bold" />
               </a>
@@ -45,10 +43,8 @@ export default function EarlyAccess() {
               {trustItems.map(item => (
                 <div
                   key={item}
-                  className="flex items-start gap-4 p-4 rounded-xl border transition-colors duration-200"
-                  style={{ borderColor: 'rgba(0,230,118,0.08)', background: 'rgba(0,230,118,0.02)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(0,230,118,0.16)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(0,230,118,0.08)' }}
+                  className="flex items-start gap-4 p-4 rounded-xl border transition-colors duration-200 border-[rgba(0,230,118,0.08)] hover:border-[rgba(0,230,118,0.18)]"
+                  style={{ background: 'rgba(0,230,118,0.02)' }}
                 >
                   <CheckCircle size={20} weight="fill" style={{ color: '#00e676', flexShrink: 0, marginTop: 1 }} />
                   <span className="text-sm leading-relaxed" style={{ color: '#e8f5ec' }}>{item}</span>
