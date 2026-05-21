@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — SCANNER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060A0E;
+    --surface: #0D1520;
+    --border: rgba(0, 212, 255, 0.15);
+    --cyan: #00D4FF;
+    --green: #00FF9D;
+    --red: #FF3C5A;
+    --text: #C8E6F0;
+    --muted: #4A6070;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+  }
+
+  /* CRT scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 212, 255, 0.012) 2px,
+      rgba(0, 212, 255, 0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Animated grid bg */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(6, 10, 14, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--green); }
+
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cyan); }
+
+  .nav-cta {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--cyan);
+    border: none;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .nav-cta:hover { background: var(--green); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 99;
+    height: 28px;
+    background: rgba(0, 212, 255, 0.06);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    gap: 2rem;
+    overflow: hidden;
+  }
+
+  .status-item {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .status-ticker {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: rgba(0, 212, 255, 0.5);
+    animation: ticker 20s linear infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes ticker {
+    0% { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 1; }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 88px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    gap: 4rem;
+  }
+
+  .hero-left { padding-top: 2rem; }
+
+  .hero-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .hero-label::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--cyan);
+  }
+
+  .hero-title {
+    font-family: var(--mono);
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title .accent { color: var(--cyan); }
+  .hero-title .green { color: var(--green); }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--cyan);
+    border: none;
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--cyan); background: rgba(0,212,255,0.06); }
+
+  .hero-stats {
+    margin-top: 3rem;
+    display: flex;
+    gap: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .hero-stat-num {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+    display: block;
+  }
+  .hero-stat-num span { color: var(--green); }
+  .hero-stat-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+  }
+
+  /* ── HERO RIGHT — PITCH CARD ── */
+  .hero-right {
+    position: relative;
+    height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .pitch-container {
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .pitch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .pitch-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+  }
+
+  .pitch-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .pitch-card-header .live {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--green);
+  }
+
+  /* SVG Soccer Pitch */
+  .pitch-svg {
+    width: 100%;
+    height: 220px;
+    display: block;
+    margin-bottom: 1.2rem;
+  }
+
+  .player-dot {
+    animation: player-float 3s ease-in-out infinite;
+  }
+  .player-dot:nth-child(odd) { animation-duration: 3.4s; animation-delay: 0.5s; }
+  .player-dot:nth-child(3n) { animation-duration: 2.8s; animation-delay: 1s; }
+
+  @keyframes player-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  .scan-line {
+    animation: scan 4s linear infinite;
+  }
+  @keyframes scan {
+    0% { transform: translateY(-220px); opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { transform: translateY(220px); opacity: 0; }
+  }
+
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  .metric-cell {
+    background: var(--surface);
+    padding: 0.8rem;
+    text-align: center;
+  }
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+  }
+  .metric-val.pos { color: var(--green); }
+  .metric-val.neg { color: var(--red); }
+  .metric-key {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.2rem;
+  }
+
+  /* Terminal log below card */
+  .terminal-log {
+    margin-top: 1px;
+    background: #020508;
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 0.8rem 1rem;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    height: 80px;
+    overflow: hidden;
+  }
+  .log-line { margin-bottom: 0.3rem; display: flex; gap: 0.6rem; }
+  .log-time { color: rgba(0,212,255,0.4); }
+  .log-type-ok { color: var(--green); }
+  .log-type-warn { color: #F5A623; }
+  .log-type-info { color: var(--cyan); }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    padding: 6rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--cyan);
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 3rem;
+    letter-spacing: -0.02em;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .step {
+    background: var(--surface);
+    padding: 2rem;
+    position: relative;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .step:hover { background: rgba(0, 212, 255, 0.05); }
+  .step::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  .step:hover::before { background: var(--cyan); }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 3rem;
+    font-weight: 700;
+    color: rgba(0, 212, 255, 0.1);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+
+  .step-title {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+
+  .step-desc {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+
+  /* ── ANALYSIS SECTION ── */
+  .analysis {
+    padding: 6rem 2rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .analysis-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 3rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+
+  .analysis-player {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    position: relative;
+  }
+  .analysis-player::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--green), transparent);
+  }
+
+  .player-header {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-bottom: 2rem;
+  }
+
+  .player-avatar {
+    width: 56px;
+    height: 56px;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--cyan);
+  }
+
+  .player-name {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+  .player-pos {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+
+  .player-grade {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .radar-bars { display: flex; flex-direction: column; gap: 0.8rem; }
+  .radar-item { display: flex; flex-direction: column; gap: 0.3rem; }
+  .radar-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .radar-val { color: #fff; }
+  .radar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .radar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 0;
+  }
+  .radar-fill.animated { width: var(--w); }
+
+  .observations { display: flex; flex-direction: column; gap: 0.8rem; }
+
+  .obs-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 1rem 1.2rem;
+    border-left: 2px solid var(--muted);
+    transition: all 0.2s;
+  }
+  .obs-card.pos { border-left-color: var(--green); }
+  .obs-card.neg { border-left-color: var(--red); }
+  .obs-card.info { border-left-color: var(--cyan); }
+
+  .obs-type {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+  .obs-card.pos .obs-type { color: var(--green); }
+  .obs-card.neg .obs-type { color: var(--red); }
+  .obs-card.info .obs-type { color: var(--cyan); }
+
+  .obs-text {
+    font-size: 0.87rem;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 6rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    margin-top: 3rem;
+  }
+
+  .plan {
+    background: var(--surface);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .plan.featured {
+    background: rgba(0, 212, 255, 0.06);
+  }
+  .plan.featured::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+  }
+
+  .plan-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .plan.featured .plan-label { color: var(--cyan); }
+
+  .plan-price {
+    font-family: var(--mono);
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .plan-price sup { font-size: 1.2rem; vertical-align: top; margin-top: 0.3rem; display: inline-block; }
+  .plan-price sub { font-size: 0.9rem; color: var(--muted); vertical-align: baseline; }
+
+  .plan-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    line-height: 1.5;
+  }
+
+  .plan-features { list-style: none; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .plan-features li {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .plan-features li::before {
+    content: '→';
+    color: var(--cyan);
+    font-size: 0.8rem;
+  }
+  .plan.featured .plan-features li::before { color: var(--green); }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.9rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .plan-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .plan.featured .plan-btn {
+    background: var(--cyan);
+    color: var(--bg);
+    border-color: var(--cyan);
+  }
+  .plan.featured .plan-btn:hover { background: var(--green); border-color: var(--green); }
+
+  /* ── EARLY ACCESS ── */
+  .early {
+    padding: 6rem 2rem;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .early-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+  .early-title {
+    font-family: var(--mono);
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  .early-title .accent { color: var(--green); }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 420px;
+  }
+  .early-form { display: flex; flex-direction: column; gap: 1rem; }
+  .early-form input {
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.9rem 1.2rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .early-form input:focus { border-color: var(--cyan); }
+  .early-form input::placeholder { color: var(--muted); }
+  .early-form button {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--cyan);
+    color: var(--bg);
+    border: none;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .early-form button:hover { background: var(--green); }
+  .early-form button:active { transform: scale(0.98); }
+  .trust-items { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; }
+  .trust-item {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .trust-item::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .footer-logo {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cyan);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .footer-logo span { color: var(--green); }
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; gap: 2rem; padding-top: 100px; }
+    .hero-right { height: auto; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .plans-grid { grid-template-columns: 1fr; }
+    .early-inner { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+    .nav-links { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player-dot, .scan-line, .status-ticker { animation: none; }
+    .radar-fill { transition: none; width: var(--w); }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PITCH<span>SCOUT</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">Protocol</a></li>
+    <li><a href="#analysis">Analysis</a></li>
+    <li><a href="#pricing">Plans</a></li>
+  </ul>
+  <button class="nav-cta">Request Access</button>
+</nav>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-item"><div class="status-dot"></div>SYSTEM ONLINE</div>
+  <div class="status-item">MODELS ACTIVE: 3</div>
+  <div class="status-item">LATENCY: 1.2s AVG</div>
+  <div class="status-ticker">AI VISION ENGINE v4.1 // MATCH CONTEXT ACTIVE // 847 PLAYERS ANALYZED THIS WEEK // RECRUITING INTELLIGENCE ENABLED //</div>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <p class="hero-label">AI Scouting Intelligence</p>
+    <h1 class="hero-title">
+      See Every<br>
+      <span class="accent">Player.</span><br>
+      Miss <span class="green">Nothing.</span>
+    </h1>
+    <p class="hero-desc">
+      Upload match footage. Our AI breaks down every touch, run, and decision — delivering deep analysis reports for youth soccer coaches and scouts in minutes.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary"><span>Analyze a Player</span></button>
+      <button class="btn-ghost">See Sample Report</button>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <span class="hero-stat-num">2<span>m</span></span>
+        <div class="hero-stat-label">Avg. Processing</div>
+      </div>
+      <div>
+        <span class="hero-stat-num">94<span>%</span></span>
+        <div class="hero-stat-label">Detection Accuracy</div>
+      </div>
+      <div>
+        <span class="hero-stat-num">38+</span>
+        <div class="hero-stat-label">Data Points</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="pitch-container">
+      <div class="pitch-card">
+        <div class="pitch-card-header">
+          <span>MATCH ANALYSIS // 04.12.25</span>
+          <span class="live"><div class="status-dot"></div>LIVE TRACKING</span>
+        </div>
+
+        <!-- SVG Pitch -->
+        <svg class="pitch-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Pitch surface -->
+          <rect width="400" height="220" fill="#071510" rx="2"/>
+          <!-- Pitch lines -->
+          <rect x="8" y="8" width="384" height="204" fill="none" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+          <!-- Center line -->
+          <line x1="200" y1="8" x2="200" y2="212" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+          <!-- Center circle -->
+          <circle cx="200" cy="110" r="36" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+          <circle cx="200" cy="110" r="2" fill="rgba(0,212,255,0.4)"/>
+          <!-- Penalty areas -->
+          <rect x="8" y="64" width="72" height="92" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+          <rect x="320" y="64" width="72" height="92" fill="none" stroke="rgba(0,212,255,0.15)" stroke-width="1"/>
+          <!-- Goal areas -->
+          <rect x="8" y="88" width="28" height="44" fill="none" stroke="rgba(0,212,255,0.12)" stroke-width="1"/>
+          <rect x="364" y="88" width="28" height="44" fill="none" stroke="rgba(0,212,255,0.12)" stroke-width="1"/>
+
+          <!-- Scan line -->
+          <line class="scan-line" x1="8" y1="0" x2="392" y2="0" stroke="rgba(0,212,255,0.5)" stroke-width="1.5"/>
+
+          <!-- Players - team A (cyan) -->
+          <g class="player-dot"><circle cx="60" cy="110" r="5" fill="rgba(0,212,255,0.9)"/><circle cx="60" cy="110" r="9" fill="rgba(0,212,255,0.15)"/></g>
+          <g class="player-dot"><circle cx="120" cy="70" r="5" fill="rgba(0,212,255,0.9)"/></g>
+          <g class="player-dot"><circle cx="120" cy="150" r="5" fill="rgba(0,212,255,0.9)"/></g>
+          <g class="player-dot"><circle cx="160" cy="90" r="5" fill="rgba(0,212,255,0.9)"/></g>
+          <g class="player-dot"><circle cx="160" cy="130" r="5" fill="rgba(0,212,255,0.9)"/></g>
+          <!-- Target player (green) -->
+          <g class="player-dot">
+            <circle cx="185" cy="100" r="6" fill="rgba(0,255,157,0.9)"/>
+            <circle cx="185" cy="100" r="12" fill="rgba(0,255,157,0.12)"/>
+            <circle cx="185" cy="100" r="18" fill="none" stroke="rgba(0,255,157,0.4)" stroke-width="1" stroke-dasharray="3,3"/>
+            <text x="195" y="92" fill="#00FF9D" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700">#7</text>
+          </g>
+          <!-- Players - team B (orange) -->
+          <g class="player-dot"><circle cx="300" cy="110" r="5" fill="rgba(255,100,40,0.9)"/></g>
+          <g class="player-dot"><circle cx="250" cy="75" r="5" fill="rgba(255,100,40,0.9)"/></g>
+          <g class="player-dot"><circle cx="250" cy="145" r="5" fill="rgba(255,100,40,0.9)"/></g>
+          <g class="player-dot"><circle cx="280" cy="95" r="5" fill="rgba(255,100,40,0.9)"/></g>
+          <g class="player-dot"><circle cx="280" cy="125" r="5" fill="rgba(255,100,40,0.9)"/></g>
+          <g class="player-dot"><circle cx="350" cy="110" r="5" fill="rgba(255,100,40,0.9)"/></g>
+
+          <!-- Movement trail for #7 -->
+          <polyline points="130,130 155,115 175,108 185,100" fill="none" stroke="rgba(0,255,157,0.3)" stroke-width="1" stroke-dasharray="4,3"/>
+        </svg>
+
+        <div class="metrics-row">
+          <div class="metric-cell">
+            <div class="metric-val pos">B+</div>
+            <div class="metric-key">Overall</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-val">87</div>
+            <div class="metric-key">Pass Acc.</div>
+          </div>
+          <div class="metric-cell">
+            <div class="metric-val pos">+14</div>
+            <div class="metric-key">Pressures</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="terminal-log">
+        <div class="log-line"><span class="log-time">14:03:21</span><span class="log-type-ok">[OK]</span> Jersey #7 detected — 63 frames analyzed</div>
+        <div class="log-line"><span class="log-time">14:03:22</span><span class="log-type-info">[AI]</span> Generating positional heatmap...</div>
+        <div class="log-line"><span class="log-time">14:03:23</span><span class="log-type-warn">[NOTE]</span> Low defensive coverage in zone 3-B</div>
+        <div class="log-line"><span class="log-time">14:03:24</span><span class="log-type-ok">[OK]</span> Report compiled — 38 data points</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <p class="section-label">Protocol</p>
+  <h2 class="section-title">Three Steps to Full Intel</h2>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Upload Footage</div>
+      <p class="step-desc">Drop any game, practice, or clip. We handle MP4, MOV, and most formats. No professional camera required — phone footage works.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Tag the Player</div>
+      <p class="step-desc">Enter the jersey number. Our AI tracks that player automatically across every minute of the match using computer vision.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Read the Report</div>
+      <p class="step-desc">Get a structured analysis: strengths, development areas, tactical patterns, pass accuracy, pressing activity, and more — all timestamped.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYSIS SAMPLE -->
+<section class="analysis" id="analysis">
+  <div class="analysis-inner">
+    <p class="section-label">Sample Output</p>
+    <h2 class="section-title">What the Report Looks Like</h2>
+    <div class="analysis-grid">
+      <div>
+        <div class="analysis-player">
+          <div class="player-header">
+            <div class="player-avatar">#7</div>
+            <div>
+              <div class="player-name">Marcus T.</div>
+              <div class="player-pos">Central Midfielder — U14</div>
+            </div>
+            <div class="player-grade">B+</div>
+          </div>
+          <div class="radar-bars">
+            <div class="radar-item">
+              <div class="radar-label-row"><span>Ball Control</span><span class="radar-val">82</span></div>
+              <div class="radar-track"><div class="radar-fill animated" style="--w: 82%"></div></div>
+            </div>
+            <div class="radar-item">
+              <div class="radar-label-row"><span>Passing</span><span class="radar-val">87</span></div>
+              <div class="radar-track"><div class="radar-fill animated" style="--w: 87%"></div></div>
+            </div>
+            <div class="radar-item">
+              <div class="radar-label-row"><span>Work Rate</span><span class="radar-val">91</span></div>
+              <div class="radar-track"><div class="radar-fill animated" style="--w: 91%"></div></div>
+            </div>
+            <div class="radar-item">
+              <div class="radar-label-row"><span>Decision Speed</span><span class="radar-val">74</span></div>
+              <div class="radar-track"><div class="radar-fill animated" style="--w: 74%"></div></div>
+            </div>
+            <div class="radar-item">
+              <div class="radar-label-row"><span>Pressing</span><span class="radar-val">78</span></div>
+              <div class="radar-track"><div class="radar-fill animated" style="--w: 78%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="observations">
+        <div class="obs-card pos">
+          <div class="obs-type">Strength Identified</div>
+          <p class="obs-text">Exceptional passing range under pressure — maintained 87% accuracy across 34 attempts, including 6 successful line-breaking passes in the second half.</p>
+        </div>
+        <div class="obs-card pos">
+          <div class="obs-type">Strength Identified</div>
+          <p class="obs-text">Strong off-ball movement in the final third. Consistently created space for teammates — 14 runs tracked, 9 resulting in a passing option.</p>
+        </div>
+        <div class="obs-card neg">
+          <div class="obs-type">Development Area</div>
+          <p class="obs-text">Decision speed in 1v1 situations was below positional average. 3 turnovers in transition were directly linked to holding the ball 0.8s longer than optimal.</p>
+        </div>
+        <div class="obs-card info">
+          <div class="obs-type">Tactical Note</div>
+          <p class="obs-text">Dropped deeper than expected for the role, suggesting self-directed positioning adjustments. Could benefit from structured pressing drills targeting zones 4-A and 5-B.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <p class="section-label">Plans</p>
+  <h2 class="section-title">Access Levels</h2>
+  <div class="plans-grid">
+    <div class="plan">
+      <div class="plan-label">Scout Free</div>
+      <div class="plan-price"><sup>$</sup>0<sub>/mo</sub></div>
+      <p class="plan-desc">Try the system. Analyze up to 3 players per month.</p>
+      <ul class="plan-features">
+        <li>3 player analyses/month</li>
+        <li>Basic performance report</li>
+        <li>7-day data retention</li>
+        <li>Email delivery</li>
+      </ul>
+      <button class="plan-btn">Get Started</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-label">Scout Pro</div>
+      <div class="plan-price"><sup>$</sup>29<sub>/mo</sub></div>
+      <p class="plan-desc">For coaches running a full squad. Unlimited analysis with team features.</p>
+      <ul class="plan-features">
+        <li>Unlimited analyses</li>
+        <li>Full tactical report</li>
+        <li>Match comparison</li>
+        <li>Shareable report links</li>
+        <li>Progress tracking</li>
+      </ul>
+      <button class="plan-btn">Start Free Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-label">Scout Club</div>
+      <div class="plan-price"><sup>$</sup>99<sub>/mo</sub></div>
+      <p class="plan-desc">Academy and club use. Multi-coach access with admin dashboard.</p>
+      <ul class="plan-features">
+        <li>Everything in Pro</li>
+        <li>Up to 10 coach accounts</li>
+        <li>Club analytics dashboard</li>
+        <li>API access</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="plan-btn">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early">
+  <div class="early-inner">
+    <div>
+      <p class="section-label">Early Access</p>
+      <h2 class="early-title">Join the<br><span class="accent">Beta Program</span></h2>
+      <p class="early-desc">We're onboarding coaches and scouts now. Get free Pro access for the first 3 months while we build with you.</p>
+      <div class="trust-items">
+        <div class="trust-item">No credit card required to start</div>
+        <div class="trust-item">Cancel any time, no contracts</div>
+        <div class="trust-item">Your footage is never shared or stored beyond analysis</div>
+      </div>
+    </div>
+    <div>
+      <form class="early-form" onsubmit="return false;">
+        <input type="text" placeholder="Your name" />
+        <input type="email" placeholder="Your email address" />
+        <input type="text" placeholder="Club or team name (optional)" />
+        <button type="submit">Request Early Access</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITCH<span>SCOUT</span> AI</div>
+  <div class="footer-copy">© 2025 PitchScout AI. All rights reserved.</div>
+</footer>
+
+<script>
+  // Animate radar bars on scroll
+  const fills = document.querySelectorAll('.radar-fill');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('animated');
+      }
+    });
+  }, { threshold: 0.2 });
+  fills.forEach(f => {
+    f.classList.remove('animated');
+    obs.observe(f);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.step, .obs-card, .plan, .analysis-player');
+  const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => {
+          e.target.style.opacity = '1';
+          e.target.style.transform = 'translateY(0)';
+        }, 60 * (Array.from(reveals).indexOf(e.target) % 4));
+        revealObs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1)';
+    revealObs.observe(el);
+  });
+
+  // Respect reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    reveals.forEach(el => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+      el.style.transition = 'none';
+    });
+  }
+</script>
+</body>
+</html>

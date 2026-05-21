@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — GHOST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #050505;
+    --surface: #0E0E0E;
+    --surface2: #141414;
+    --border: rgba(255,255,255,0.08);
+    --white: #FFFFFF;
+    --off: #A8A8A8;
+    --neon: #39FF14;
+    --neon-dim: rgba(57,255,20,0.12);
+    --syne: 'Syne', sans-serif;
+    --jakarta: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--jakarta);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    height: 68px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(5,5,5,0.9);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: var(--syne);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-logo sup {
+    font-size: 0.55rem;
+    color: var(--neon);
+    vertical-align: super;
+    font-family: var(--jakarta);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .nav-links { display: flex; gap: 3rem; list-style: none; }
+  .nav-links a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--off);
+    text-decoration: none;
+    transition: color 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    font-family: var(--jakarta);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--black);
+    background: var(--neon);
+    border: none;
+    padding: 0.55rem 1.4rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .nav-cta:hover { background: var(--white); box-shadow: 0 0 20px rgba(57,255,20,0.25); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 68px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+  }
+
+  /* Left column — huge type */
+  .hero-left {
+    padding: 6rem 3rem 6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+  }
+
+  .hero-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-title {
+    font-family: var(--syne);
+    font-size: clamp(3.5rem, 6vw, 6.5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--white);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Neon stroke text */
+  .hero-title .outline {
+    -webkit-text-stroke: 1.5px rgba(255,255,255,0.35);
+    color: transparent;
+  }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--off);
+    max-width: 400px;
+    margin-bottom: 3rem;
+    font-weight: 400;
+  }
+
+  .hero-cta-row { display: flex; align-items: center; gap: 1.5rem; }
+  .btn-neon {
+    font-family: var(--jakarta);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--black);
+    background: var(--neon);
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    letter-spacing: 0.01em;
+  }
+  .btn-neon:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(57,255,20,0.3);
+  }
+  .btn-neon:active { transform: scale(0.97); }
+
+  .btn-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--off);
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+    padding: 0;
+  }
+  .btn-text:hover { color: var(--white); }
+  .btn-text::after {
+    content: '→';
+    transition: transform 0.2s;
+  }
+  .btn-text:hover::after { transform: translateX(4px); }
+
+  /* Left bottom metrics */
+  .hero-metrics {
+    margin-top: auto;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 3rem;
+  }
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .metric-num {
+    font-family: var(--syne);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+  .metric-num em { color: var(--neon); font-style: normal; }
+  .metric-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--off);
+    letter-spacing: 0.03em;
+  }
+
+  /* Right column — report preview */
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+  }
+
+  .report-header {
+    padding: 2.5rem 3rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .report-meta {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--off);
+  }
+  .report-meta strong {
+    display: block;
+    font-family: var(--syne);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+  }
+
+  .report-grade-wrap {
+    text-align: right;
+  }
+  .report-grade {
+    font-family: var(--syne);
+    font-size: 4.5rem;
+    font-weight: 800;
+    color: var(--neon);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    text-shadow: 0 0 40px rgba(57,255,20,0.3);
+  }
+  .report-grade-label {
+    font-size: 0.65rem;
+    color: var(--off);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+  }
+
+  /* Report body */
+  .report-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Metrics row */
+  .report-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .report-stat {
+    padding: 1.5rem 2rem;
+    border-right: 1px solid var(--border);
+  }
+  .report-stat:last-child { border-right: none; }
+  .report-stat-num {
+    font-family: var(--syne);
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.03em;
+  }
+  .report-stat-num.up { color: var(--neon); }
+  .report-stat-num.down { color: #FF4D6D; }
+  .report-stat-key {
+    font-size: 0.67rem;
+    font-weight: 500;
+    color: var(--off);
+    letter-spacing: 0.05em;
+    margin-top: 0.2rem;
+    text-transform: uppercase;
+  }
+
+  /* Observation cards */
+  .report-obs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .obs-item {
+    padding: 1.5rem 2.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    transition: background 0.2s;
+    cursor: default;
+  }
+  .obs-item:hover { background: rgba(255,255,255,0.02); }
+  .obs-item:last-child { border-bottom: none; }
+
+  .obs-marker {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 0.5rem;
+    flex-shrink: 0;
+    background: var(--off);
+  }
+  .obs-marker.pos { background: var(--neon); box-shadow: 0 0 8px rgba(57,255,20,0.4); }
+  .obs-marker.neg { background: #FF4D6D; box-shadow: 0 0 8px rgba(255,77,109,0.3); }
+  .obs-marker.info { background: #60A5FA; box-shadow: 0 0 8px rgba(96,165,250,0.3); }
+
+  .obs-content {}
+  .obs-type {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--off);
+    margin-bottom: 0.3rem;
+  }
+  .obs-item .obs-marker.pos ~ .obs-content .obs-type { color: var(--neon); }
+  .obs-item .obs-marker.neg ~ .obs-content .obs-type { color: #FF4D6D; }
+  .obs-item .obs-marker.info ~ .obs-content .obs-type { color: #60A5FA; }
+  .obs-text {
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.65);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0 3rem;
+    margin: 4rem 0;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--off);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 3rem 6rem;
+  }
+
+  .how-header { margin-bottom: 4rem; }
+  .how-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1.2rem;
+  }
+  .how-title {
+    font-family: var(--syne);
+    font-size: clamp(2.5rem, 4vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .how-step {
+    padding: 2.5rem 2.5rem 2.5rem 0;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .how-step:last-child { border-right: none; padding-right: 0; padding-left: 2.5rem; }
+  .how-step:nth-child(2) { padding: 2.5rem; }
+
+  .how-step-n {
+    font-family: var(--syne);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--neon);
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+  }
+
+  .how-step-title {
+    font-family: var(--syne);
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    margin-bottom: 0.8rem;
+    line-height: 1.1;
+  }
+
+  .how-step-desc {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--off);
+  }
+
+  /* ── FEATURES ── */
+  .features {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 6rem 3rem;
+  }
+  .features-inner { max-width: 1400px; margin: 0 auto; }
+  .features-title {
+    font-family: var(--syne);
+    font-size: clamp(2.5rem, 4vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin-bottom: 4rem;
+  }
+  .features-title em { color: var(--neon); font-style: normal; }
+
+  .features-list { display: flex; flex-direction: column; }
+  .feature-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--border);
+    align-items: start;
+    transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
+    cursor: default;
+  }
+  .feature-row:hover { padding-left: 1.5rem; }
+  .feature-name {
+    font-family: var(--syne);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    padding-top: 0.15rem;
+  }
+  .feature-desc {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--off);
+  }
+  .feature-tag {
+    display: inline-block;
+    margin-top: 0.8rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--neon);
+    background: var(--neon-dim);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 6rem 3rem;
+  }
+  .pricing-header { margin-bottom: 4rem; }
+  .pricing-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1.2rem;
+  }
+  .pricing-title {
+    font-family: var(--syne);
+    font-size: clamp(2.5rem, 4vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--border); }
+  .plan {
+    padding: 2.5rem;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.3s;
+  }
+  .plan:last-child { border-right: none; }
+  .plan.featured { background: var(--surface2); }
+  .plan.featured::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--neon);
+    box-shadow: 0 0 12px rgba(57,255,20,0.4);
+  }
+
+  .plan-tier {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--off);
+    margin-bottom: 2rem;
+  }
+  .plan.featured .plan-tier { color: var(--neon); }
+
+  .plan-price {
+    font-family: var(--syne);
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .plan-price span { font-size: 1.4rem; vertical-align: top; margin-top: 0.4rem; display: inline-block; color: var(--off); }
+  .plan-price sub { font-size: 0.9rem; vertical-align: baseline; color: var(--off); font-weight: 400; font-family: var(--jakarta); }
+
+  .plan-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--off);
+    margin-bottom: 2rem;
+    margin-top: 0.4rem;
+  }
+
+  .plan-divider { height: 1px; background: var(--border); margin-bottom: 1.5rem; }
+
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2.5rem; }
+  .plan-features li {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .plan-features li::before {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 7l3 3 6-5.5' stroke='%2339FF14' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--jakarta);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.8rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--off);
+    letter-spacing: 0.02em;
+  }
+  .plan-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+  .plan.featured .plan-btn {
+    background: var(--neon);
+    color: var(--black);
+    border-color: var(--neon);
+    font-weight: 700;
+  }
+  .plan.featured .plan-btn:hover {
+    background: var(--white);
+    border-color: var(--white);
+    box-shadow: 0 0 24px rgba(57,255,20,0.2);
+  }
+
+  /* ── EARLY ACCESS ── */
+  .early {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 7rem 3rem;
+  }
+  .early-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8rem;
+    align-items: center;
+  }
+
+  .early-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--neon);
+    margin-bottom: 1.5rem;
+  }
+  .early-title {
+    font-family: var(--syne);
+    font-size: clamp(2.8rem, 4.5vw, 5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin-bottom: 1.5rem;
+  }
+  .early-title .outline {
+    -webkit-text-stroke: 1.5px rgba(255,255,255,0.3);
+    color: transparent;
+  }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--off);
+    max-width: 380px;
+    margin-bottom: 2.5rem;
+  }
+  .early-checklist { display: flex; flex-direction: column; gap: 0.7rem; }
+  .early-check {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+  }
+  .early-check::before {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 7l3 3 6-5.5' stroke='%2339FF14' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  /* Form */
+  .early-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .form-field {
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  .form-field:last-of-type { border-bottom: none; }
+  .form-field label {
+    position: absolute;
+    top: 0.8rem;
+    left: 1.5rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--off);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+  .form-field:focus-within label { color: var(--neon); }
+  .form-field input {
+    width: 100%;
+    padding: 2.2rem 1.5rem 0.8rem;
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-family: var(--jakarta);
+    font-size: 0.92rem;
+    outline: none;
+  }
+  .form-field input::placeholder { color: var(--off); opacity: 0.4; }
+
+  .form-submit {
+    padding: 1.2rem 1.5rem;
+    background: var(--neon);
+    color: var(--black);
+    font-family: var(--jakarta);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .form-submit::after { content: '→'; }
+  .form-submit:hover {
+    background: var(--white);
+    box-shadow: 0 0 32px rgba(57,255,20,0.2);
+  }
+  .form-submit:active { transform: scale(0.98); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+  }
+  .footer-logo {
+    font-family: var(--syne);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--white);
+  }
+  .footer-logo sup { color: var(--neon); font-size: 0.5rem; }
+  .footer-copy {
+    font-size: 0.75rem;
+    color: var(--off);
+    opacity: 0.5;
+    text-align: center;
+  }
+  .footer-links { display: flex; justify-content: flex-end; gap: 2rem; }
+  .footer-links a {
+    font-size: 0.78rem;
+    color: var(--off);
+    opacity: 0.5;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+  .footer-links a:hover { opacity: 1; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { padding: 3rem 1.5rem; border-right: none; border-bottom: 1px solid var(--border); }
+    .hero-right { min-height: auto; }
+    .report-stats { grid-template-columns: 1fr 1fr; }
+    .how { padding: 3rem 1.5rem; }
+    .how-grid { grid-template-columns: 1fr; border-top: none; }
+    .how-step { padding: 2rem 0 !important; border-right: none; border-top: 1px solid var(--border); }
+    .features { padding: 4rem 1.5rem; }
+    .pricing { padding: 4rem 1.5rem; }
+    .plans { grid-template-columns: 1fr; }
+    .plan { border-right: none; border-bottom: 1px solid var(--border); }
+    .plan:last-child { border-bottom: none; }
+    .early { padding: 4rem 1.5rem; }
+    .early-inner { grid-template-columns: 1fr; gap: 3rem; }
+    footer { grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem; }
+    .footer-links { justify-content: flex-start; }
+    .footer-copy { text-align: left; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+
+  /* Neon glow pulse on grade */
+  @keyframes glow-pulse {
+    0%, 100% { text-shadow: 0 0 40px rgba(57,255,20,0.3); }
+    50% { text-shadow: 0 0 60px rgba(57,255,20,0.55), 0 0 100px rgba(57,255,20,0.15); }
+  }
+  .report-grade {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .report-grade { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PitchScout<sup>AI</sup></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="nav-cta">Get Early Access</button>
+</nav>
+
+<!-- HERO — SPLIT SCREEN -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <p class="hero-tag">Youth Soccer · AI Analysis</p>
+    <h1 class="hero-title">
+      Deep<br>
+      Player<br>
+      <span class="outline">Analysis.</span><br>
+      In Minutes.
+    </h1>
+    <p class="hero-desc">
+      Upload any match footage. Enter a jersey number. Receive a full AI-generated performance report — passes, pressing, positioning, development areas.
+    </p>
+    <div class="hero-cta-row">
+      <button class="btn-neon">Start Free Analysis</button>
+      <button class="btn-text">See a Sample Report</button>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric">
+        <span class="metric-num">2<em>m</em></span>
+        <span class="metric-label">Avg processing time</span>
+      </div>
+      <div class="metric">
+        <span class="metric-num">38<em>+</em></span>
+        <span class="metric-label">Data points per report</span>
+      </div>
+      <div class="metric">
+        <span class="metric-num">94<em>%</em></span>
+        <span class="metric-label">Detection accuracy</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live report preview -->
+  <div class="hero-right">
+    <div class="report-header">
+      <div class="report-meta">
+        <strong>Adaeze Nwosu</strong>
+        Attacking Midfielder · #10 · U16 · 04.12.25
+      </div>
+      <div class="report-grade-wrap">
+        <div class="report-grade">A</div>
+        <div class="report-grade-label">Overall Grade</div>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <div class="report-stats">
+        <div class="report-stat">
+          <div class="report-stat-num up">91%</div>
+          <div class="report-stat-key">Pass Accuracy</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-num">47</div>
+          <div class="report-stat-key">Touches</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-num up">+17</div>
+          <div class="report-stat-key">Pressures</div>
+        </div>
+        <div class="report-stat">
+          <div class="report-stat-num down">-3</div>
+          <div class="report-stat-key">Turnovers</div>
+        </div>
+      </div>
+
+      <div class="report-obs">
+        <div class="obs-item">
+          <div class="obs-marker pos"></div>
+          <div class="obs-content">
+            <div class="obs-type">Strength Identified</div>
+            <p class="obs-text">Outstanding vision in the final third — 7 of 8 through balls reached their target, creating clear goal-scoring chances each time.</p>
+          </div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-marker pos"></div>
+          <div class="obs-content">
+            <div class="obs-type">Strength Identified</div>
+            <p class="obs-text">High pressing intensity maintained across both halves. Recovered possession 6 times in opponent's half — top 5% for this age group.</p>
+          </div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-marker neg"></div>
+          <div class="obs-content">
+            <div class="obs-type">Development Area</div>
+            <p class="obs-text">Defensive positioning needs attention. Exposed in transition — 3 opponent counters were enabled by her positioning during attacking phases.</p>
+          </div>
+        </div>
+        <div class="obs-item">
+          <div class="obs-marker info"></div>
+          <div class="obs-content">
+            <div class="obs-type">Tactical Note</div>
+            <p class="obs-text">Drift pattern suggests a natural preference for the left channel — consider exploiting this in attacking shape rather than asking for central positioning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"><div class="divider-line"></div><div class="divider-text">How It Works</div><div class="divider-line"></div></div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-header">
+    <p class="how-label">The Process</p>
+    <h2 class="how-title">Three steps<br>to full analysis</h2>
+  </div>
+  <div class="how-grid">
+    <div class="how-step">
+      <div class="how-step-n">01</div>
+      <h3 class="how-step-title">Upload Your Footage</h3>
+      <p class="how-step-desc">Any format. Any camera. Drop a full match or a short clip — our system handles the rest. Phone footage from the sideline is enough.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-n">02</div>
+      <h3 class="how-step-title">Enter a Jersey Number</h3>
+      <p class="how-step-desc">Just the number. Our AI tracks and isolates that player automatically for the full duration — no manual annotation, no special setup.</p>
+    </div>
+    <div class="how-step">
+      <div class="how-step-n">03</div>
+      <h3 class="how-step-title">Read the Report</h3>
+      <p class="how-step-desc">Receive a graded, timestamped report. Share it with parents, players, or your technical director — clean format anyone can read.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <h2 class="features-title">Built for<br>serious <em>coaches</em></h2>
+    <div class="features-list">
+      <div class="feature-row">
+        <div class="feature-name">Jersey Detection</div>
+        <div class="feature-desc">
+          AI identifies and tracks a player by jersey number alone using computer vision trained on soccer footage. No wearables, no markers, no professional setup required.
+          <span class="feature-tag">Computer Vision</span>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-name">38+ Performance Metrics</div>
+        <div class="feature-desc">
+          From basic pass accuracy to off-ball movement patterns, pressing intensity, positional discipline, and decision speed — every metric needed to develop players with precision.
+          <span class="feature-tag">AI Analysis</span>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-name">Shareable Reports</div>
+        <div class="feature-desc">
+          Every report gets a clean, shareable link. Send it to parents, players, or a technical director. No login required to view.
+          <span class="feature-tag">Easy Sharing</span>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-name">Progress Tracking</div>
+        <div class="feature-desc">
+          Upload multiple matches over a season and watch how each player develops. Trend data across weeks and months, not just single snapshots.
+          <span class="feature-tag">Long-term View</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <p class="pricing-label">Plans</p>
+    <h2 class="pricing-title">Simple,<br>honest pricing</h2>
+  </div>
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-tier">Free</div>
+      <div class="plan-price"><span>$</span>0<sub>/mo</sub></div>
+      <p class="plan-desc">Try PitchScout. 3 full analyses every month, no credit card needed.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>3 player analyses/month</li>
+        <li>Basic performance report</li>
+        <li>7-day data retention</li>
+        <li>Email delivery</li>
+      </ul>
+      <button class="plan-btn">Start Free</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-tier">Pro — Most Popular</div>
+      <div class="plan-price"><span>$</span>29<sub>/mo</sub></div>
+      <p class="plan-desc">Unlimited analyses. Everything a dedicated coach needs for a full squad.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>Unlimited analyses</li>
+        <li>Full tactical report</li>
+        <li>Progress tracking</li>
+        <li>Shareable report links</li>
+        <li>Video timestamps</li>
+        <li>Priority processing</li>
+      </ul>
+      <button class="plan-btn">Start 14-Day Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-tier">Club</div>
+      <div class="plan-price"><span>$</span>99<sub>/mo</sub></div>
+      <p class="plan-desc">Multi-coach access. Built for academies and clubs running multiple teams.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-features">
+        <li>Everything in Pro</li>
+        <li>Up to 10 coach accounts</li>
+        <li>Club analytics dashboard</li>
+        <li>API access</li>
+        <li>Dedicated support</li>
+      </ul>
+      <button class="plan-btn">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early" id="early">
+  <div class="early-inner">
+    <div>
+      <p class="early-label">Beta Program</p>
+      <h2 class="early-title">
+        Join<br>
+        <span class="outline">Early.</span><br>
+        Build With<br>
+        Us.
+      </h2>
+      <p class="early-desc">We're onboarding coaches right now. Get free Pro access for 3 months while we build with your real feedback.</p>
+      <div class="early-checklist">
+        <div class="early-check">No credit card required</div>
+        <div class="early-check">Your footage is never shared or stored beyond analysis</div>
+        <div class="early-check">Cancel any time, no contracts</div>
+      </div>
+    </div>
+    <div>
+      <form onsubmit="return false;">
+        <div class="early-form">
+          <div class="form-field">
+            <label for="ea-name">Full Name</label>
+            <input type="text" id="ea-name" placeholder="Firstname Lastname" />
+          </div>
+          <div class="form-field">
+            <label for="ea-email">Email Address</label>
+            <input type="email" id="ea-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-field">
+            <label for="ea-club">Club or Team</label>
+            <input type="text" id="ea-club" placeholder="Optional" />
+          </div>
+          <button type="submit" class="form-submit">Request Access</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PitchScout<sup>AI</sup></div>
+  <div class="footer-copy">© 2025 PitchScout AI. All rights reserved.</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+
+<script>
+  // Reveal on scroll for feature rows and how-steps
+  const items = document.querySelectorAll('.feature-row, .how-step, .plan, .obs-item');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(12px)';
+      el.style.transition = `opacity 0.5s ${(i % 4) * 0.06}s cubic-bezier(0.16,1,0.3,1), transform 0.5s ${(i % 4) * 0.06}s cubic-bezier(0.16,1,0.3,1)`;
+      obs.observe(el);
+    });
+  }
+</script>
+</body>
+</html>

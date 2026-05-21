@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — VOLTAGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #06091A;
+    --navy2: #0C1030;
+    --lime: #C8FF00;
+    --coral: #FF2D4E;
+    --white: #FFFFFF;
+    --off: #F0F4FF;
+    --muted: #5A6080;
+    --condensed: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--body);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    height: 64px;
+    background: rgba(6, 9, 26, 0.92);
+    backdrop-filter: blur(16px);
+  }
+
+  .nav-logo {
+    font-family: var(--condensed);
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-logo em { color: var(--lime); font-style: normal; }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--condensed);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--lime); }
+
+  .nav-cta {
+    font-family: var(--condensed);
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: var(--lime);
+    border: none;
+    padding: 0.6rem 1.6rem;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.2s;
+  }
+  .nav-cta:hover { background: var(--white); transform: translateY(-1px); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 64px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: stretch;
+  }
+
+  /* Diagonal split */
+  .hero-bg-left {
+    position: absolute;
+    inset: 0;
+    background: var(--navy);
+    clip-path: polygon(0 0, 62% 0, 52% 100%, 0 100%);
+    z-index: 0;
+  }
+  .hero-bg-right {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #0F1635, var(--navy2));
+    z-index: 0;
+  }
+  .hero-accent-shape {
+    position: absolute;
+    top: 0; right: 0;
+    width: 40vw;
+    height: 100%;
+    background: linear-gradient(160deg, rgba(200,255,0,0.07), transparent 60%);
+    z-index: 0;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2.5rem;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: center;
+    gap: 4rem;
+  }
+
+  .hero-eyebrow {
+    display: inline-block;
+    font-family: var(--condensed);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--lime);
+    background: rgba(200,255,0,0.1);
+    padding: 0.3rem 0.8rem;
+    margin-bottom: 1.5rem;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+  }
+
+  .hero-title {
+    font-family: var(--condensed);
+    font-size: clamp(4rem, 8vw, 8rem);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 2rem;
+  }
+  .hero-title .lime { color: var(--lime); }
+  .hero-title .stroke {
+    -webkit-text-stroke: 2px var(--white);
+    color: transparent;
+  }
+  .hero-title .coral { color: var(--coral); }
+
+  .hero-desc {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.6);
+    max-width: 440px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+  .btn-lime {
+    font-family: var(--condensed);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: var(--lime);
+    border: none;
+    padding: 1rem 2.2rem;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-lime:hover { background: var(--white); transform: translateY(-2px); }
+  .btn-lime:active { transform: scale(0.97); }
+
+  .btn-outline {
+    font-family: var(--condensed);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white);
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    padding: 1rem 2.2rem;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { border-color: var(--lime); color: var(--lime); }
+
+  /* Hero right — big grade card */
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 2rem;
+  }
+
+  .grade-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-top: 3px solid var(--lime);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .grade-card:hover { transform: translateY(-4px); }
+  .grade-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; right: -30%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(200,255,0,0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .grade-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .grade-player-name {
+    font-family: var(--condensed);
+    font-size: 1.3rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--white);
+  }
+  .grade-player-pos {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.4);
+    margin-top: 0.15rem;
+    letter-spacing: 0.06em;
+  }
+
+  .grade-badge {
+    font-family: var(--condensed);
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--lime);
+    line-height: 1;
+  }
+
+  .grade-bars { display: flex; flex-direction: column; gap: 0.7rem; }
+  .grade-bar-row { display: flex; align-items: center; gap: 0.8rem; }
+  .grade-bar-name {
+    font-family: var(--condensed);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.5);
+    width: 80px;
+    flex-shrink: 0;
+  }
+  .grade-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    overflow: hidden;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+  .grade-bar-fill {
+    height: 100%;
+    background: var(--lime);
+    width: var(--w);
+    transition: none;
+  }
+  .grade-bar-val {
+    font-family: var(--condensed);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--white);
+    width: 28px;
+    text-align: right;
+  }
+
+  /* Mini insight cards */
+  .insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .insight-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 1rem 1.2rem;
+    border-left: 3px solid var(--lime);
+    transition: transform 0.2s;
+    cursor: default;
+  }
+  .insight-card:hover { transform: translateX(4px); }
+  .insight-card.neg { border-left-color: var(--coral); }
+  .insight-label {
+    font-family: var(--condensed);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--lime);
+    margin-bottom: 0.3rem;
+  }
+  .insight-card.neg .insight-label { color: var(--coral); }
+  .insight-text {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.65);
+    line-height: 1.4;
+  }
+
+  /* ── STATS BAND ── */
+  .stats-band {
+    background: var(--lime);
+    padding: 2rem 2.5rem;
+    overflow: hidden;
+  }
+  .stats-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 2rem;
+    border-right: 1px solid rgba(6,9,26,0.15);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: var(--condensed);
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--navy);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    font-family: var(--condensed);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(6,9,26,0.55);
+    margin-top: 0.3rem;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    padding: 7rem 2.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-family: var(--condensed);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--lime);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--condensed);
+    font-size: clamp(2.8rem, 5vw, 5rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 0.95;
+    color: var(--white);
+    margin-bottom: 4rem;
+  }
+
+  .steps { display: flex; flex-direction: column; gap: 0; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1);
+    cursor: default;
+  }
+  .step:hover { padding-left: 1rem; }
+
+  .step-num {
+    font-family: var(--condensed);
+    font-size: 4rem;
+    font-weight: 900;
+    color: rgba(200,255,0,0.15);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .step:hover .step-num { color: var(--lime); }
+
+  .step-content {}
+  .step-title {
+    font-family: var(--condensed);
+    font-size: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+  .step-desc {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.45);
+    max-width: 500px;
+  }
+
+  .step-tag {
+    font-family: var(--condensed);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    background: var(--lime);
+    padding: 0.3rem 0.7rem;
+    white-space: nowrap;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+  }
+
+  /* ── FEATURE BENTO ── */
+  .features {
+    padding: 6rem 2.5rem;
+    background: var(--navy2);
+  }
+  .features-inner { max-width: 1400px; margin: 0 auto; }
+
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    margin-top: 3rem;
+  }
+
+  .bento-cell {
+    background: var(--navy2);
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .bento-cell:hover { background: rgba(200,255,0,0.04); }
+  .bento-cell.wide { grid-column: span 2; }
+  .bento-cell.tall { grid-row: span 2; }
+
+  .bento-cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.3s;
+  }
+  .bento-cell:hover::before { background: var(--lime); }
+
+  .bento-icon {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+    display: block;
+  }
+
+  .bento-title {
+    font-family: var(--condensed);
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--white);
+    margin-bottom: 0.6rem;
+  }
+
+  .bento-desc {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(255,255,255,0.45);
+  }
+
+  .bento-big-num {
+    font-family: var(--condensed);
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--lime);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 7rem 2.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(255,255,255,0.06); margin-top: 3rem; }
+
+  .plan {
+    background: var(--navy);
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .plan:hover { background: rgba(255,255,255,0.03); }
+  .plan.featured {
+    background: var(--lime);
+    color: var(--navy);
+  }
+  .plan.featured:hover { background: var(--lime); }
+
+  .plan-label {
+    font-family: var(--condensed);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 1.5rem;
+  }
+  .plan.featured .plan-label { color: rgba(6,9,26,0.55); }
+
+  .plan-price {
+    font-family: var(--condensed);
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+  .plan.featured .plan-price { color: var(--navy); }
+  .plan-price span { font-size: 1.5rem; vertical-align: top; margin-top: 0.5rem; display: inline-block; }
+  .plan-price sub { font-size: 1rem; font-weight: 400; vertical-align: baseline; }
+
+  .plan-desc {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 2rem;
+  }
+  .plan.featured .plan-desc { color: rgba(6,9,26,0.6); }
+
+  .plan-list { list-style: none; margin-bottom: 2rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .plan-list li {
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .plan.featured .plan-list li { color: rgba(6,9,26,0.75); }
+  .plan-list li::before {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 16px;
+    background: rgba(200,255,0,0.15);
+    clip-path: polygon(3px 0%, 100% 0%, calc(100% - 3px) 100%, 0% 100%);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .plan-list li::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-6' stroke='%23C8FF00' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  .plan.featured .plan-list li::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-6' stroke='%2306091A' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--condensed);
+    font-size: 0.9rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.9rem;
+    background: transparent;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: all 0.2s;
+  }
+  .plan-btn:hover { border-color: var(--lime); color: var(--lime); }
+  .plan.featured .plan-btn {
+    background: var(--navy);
+    color: var(--lime);
+    border-color: transparent;
+  }
+  .plan.featured .plan-btn:hover { background: #0C1030; }
+
+  /* ── EARLY ACCESS ── */
+  .early {
+    background: linear-gradient(160deg, var(--navy2), var(--navy));
+    padding: 7rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .early::before {
+    content: '';
+    position: absolute;
+    bottom: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(200,255,0,0.07), transparent 65%);
+    pointer-events: none;
+  }
+  .early-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .early-title {
+    font-family: var(--condensed);
+    font-size: clamp(3rem, 5vw, 5rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+  .early-title .lime { color: var(--lime); }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.5);
+    max-width: 380px;
+    margin-bottom: 2rem;
+  }
+  .trust-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .trust-list li {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.45);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .trust-list li::before { content: '—'; color: var(--lime); font-weight: 700; }
+
+  .early-form { display: flex; flex-direction: column; gap: 0.8rem; }
+  .early-form input {
+    font-family: var(--body);
+    font-size: 0.92rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    padding: 0.9rem 1.2rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .early-form input:focus { border-color: var(--lime); }
+  .early-form input::placeholder { color: rgba(255,255,255,0.25); }
+  .early-form button {
+    font-family: var(--condensed);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--lime);
+    color: var(--navy);
+    border: none;
+    padding: 1.1rem;
+    cursor: pointer;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+    transition: all 0.2s;
+    margin-top: 0.4rem;
+  }
+  .early-form button:hover { background: var(--white); transform: translateY(-2px); }
+  .early-form button:active { transform: scale(0.97); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #030510;
+    padding: 2rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-logo {
+    font-family: var(--condensed);
+    font-size: 1.2rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--white);
+  }
+  .footer-logo em { color: var(--lime); font-style: normal; }
+  .footer-copy {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.25);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .hero-inner { grid-template-columns: 1fr; padding-top: 2rem; }
+    .insight-row { grid-template-columns: 1fr; }
+    .stats-inner { grid-template-columns: 1fr 1fr; }
+    .step { grid-template-columns: 60px 1fr; }
+    .step-tag { display: none; }
+    .bento { grid-template-columns: 1fr; }
+    .bento-cell.wide { grid-column: span 1; }
+    .plans { grid-template-columns: 1fr; }
+    .early-inner { grid-template-columns: 1fr; gap: 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+    .nav-links { display: none; }
+    .hero-title { font-size: 3.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PITCH<em>SCOUT</em></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="nav-cta">Get Early Access</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg-right"></div>
+  <div class="hero-bg-left"></div>
+  <div class="hero-accent-shape"></div>
+
+  <div class="hero-inner">
+    <div>
+      <span class="hero-eyebrow">AI Soccer Analysis</span>
+      <h1 class="hero-title">
+        KNOW<br>
+        EVERY<br>
+        <span class="lime">PLAYER</span>
+      </h1>
+      <p class="hero-desc">
+        Upload any match footage. Tag a jersey number. Get a deep analysis report on that player in minutes — passes, pressing, positioning, and more.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-lime">Start Analyzing</button>
+        <button class="btn-outline">See Sample Report</button>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="grade-card">
+        <div class="grade-top">
+          <div>
+            <div class="grade-player-name">Karim Osei-Bonsu</div>
+            <div class="grade-player-pos">Central Midfielder · U15 · #11</div>
+          </div>
+          <div class="grade-badge">A-</div>
+        </div>
+        <div class="grade-bars">
+          <div class="grade-bar-row">
+            <span class="grade-bar-name">Passing</span>
+            <div class="grade-bar-track"><div class="grade-bar-fill" style="--w: 91%"></div></div>
+            <span class="grade-bar-val">91</span>
+          </div>
+          <div class="grade-bar-row">
+            <span class="grade-bar-name">Control</span>
+            <div class="grade-bar-track"><div class="grade-bar-fill" style="--w: 85%"></div></div>
+            <span class="grade-bar-val">85</span>
+          </div>
+          <div class="grade-bar-row">
+            <span class="grade-bar-name">Work Rate</span>
+            <div class="grade-bar-track"><div class="grade-bar-fill" style="--w: 94%"></div></div>
+            <span class="grade-bar-val">94</span>
+          </div>
+          <div class="grade-bar-row">
+            <span class="grade-bar-name">Decisions</span>
+            <div class="grade-bar-track"><div class="grade-bar-fill" style="--w: 78%"></div></div>
+            <span class="grade-bar-val">78</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="insight-row">
+        <div class="insight-card">
+          <div class="insight-label">Strength</div>
+          <div class="insight-text">Line-breaking passes — 7 of 8 succeeded in the 2nd half.</div>
+        </div>
+        <div class="insight-card neg">
+          <div class="insight-label">Develop</div>
+          <div class="insight-text">Slower decisions in 1v1 situations vs peer average.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAND -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <span class="stat-num">2min</span>
+      <span class="stat-label">Avg Report Time</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">38+</span>
+      <span class="stat-label">Data Points</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">94%</span>
+      <span class="stat-label">Detection Accuracy</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">U8–U18</span>
+      <span class="stat-label">Age Groups</span>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <p class="section-eyebrow">The Process</p>
+  <h2 class="section-title">How It<br>Works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <div class="step-title">Upload Your Footage</div>
+        <p class="step-desc">Drop any game video — MP4, MOV, or most formats. Phone footage is fine. Full matches or clips both work.</p>
+      </div>
+      <span class="step-tag">Any Camera</span>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <div class="step-title">Tell Us the Jersey Number</div>
+        <p class="step-desc">Enter a number. Our AI tracks and isolates that player for the entire duration — no manual tagging needed.</p>
+      </div>
+      <span class="step-tag">AI Tracking</span>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <div class="step-title">Read the Full Report</div>
+        <p class="step-desc">Receive a structured analysis: grade, strengths, development areas, tactical observations — all timestamped to the video.</p>
+      </div>
+      <span class="step-tag">Instant</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES BENTO -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <p class="section-eyebrow">What You Get</p>
+    <h2 class="section-title">Built for<br>Coaches</h2>
+    <div class="bento">
+      <div class="bento-cell wide">
+        <div class="bento-big-num">38+</div>
+        <div class="bento-title">Performance Data Points</div>
+        <p class="bento-desc">From basic pass accuracy to complex off-ball movement patterns — every metric a youth coach needs to develop players with intention.</p>
+      </div>
+      <div class="bento-cell">
+        <div class="bento-title">Jersey Detection</div>
+        <p class="bento-desc">AI identifies and tracks a player by number alone — no wearables, no special cameras required.</p>
+      </div>
+      <div class="bento-cell">
+        <div class="bento-title">Shareable Reports</div>
+        <p class="bento-desc">Send a link to parents, players, or the technical director. Clean, readable format anyone can understand.</p>
+      </div>
+      <div class="bento-cell">
+        <div class="bento-title">Progress Over Time</div>
+        <p class="bento-desc">Upload multiple matches and track how a player develops week by week, not just snapshot-to-snapshot.</p>
+      </div>
+      <div class="bento-cell wide">
+        <div class="bento-title">Works With Any Footage</div>
+        <p class="bento-desc">Phone recording from the sideline. Tripod. Coach camera. Stadium feed. If it shows the player, we can analyze it. No minimum production quality required.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <p class="section-eyebrow">Plans</p>
+  <h2 class="section-title">Simple<br>Pricing</h2>
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-label">Free</div>
+      <div class="plan-price"><span>$</span>0<sub>/mo</sub></div>
+      <p class="plan-desc">Try PitchScout with 3 analyses per month.</p>
+      <ul class="plan-list">
+        <li>3 player analyses/month</li>
+        <li>Basic report</li>
+        <li>7-day data retention</li>
+        <li>Email delivery</li>
+      </ul>
+      <button class="plan-btn">Get Started Free</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-label">Pro — Most Popular</div>
+      <div class="plan-price"><span>$</span>29<sub>/mo</sub></div>
+      <p class="plan-desc">Unlimited analyses for the dedicated coach.</p>
+      <ul class="plan-list">
+        <li>Unlimited analyses</li>
+        <li>Full tactical report</li>
+        <li>Progress tracking</li>
+        <li>Shareable links</li>
+        <li>Video timestamps</li>
+      </ul>
+      <button class="plan-btn">Start Free Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-label">Club</div>
+      <div class="plan-price"><span>$</span>99<sub>/mo</sub></div>
+      <p class="plan-desc">Multi-coach access for academies and clubs.</p>
+      <ul class="plan-list">
+        <li>Everything in Pro</li>
+        <li>Up to 10 coach seats</li>
+        <li>Club analytics dashboard</li>
+        <li>Priority support</li>
+        <li>API access</li>
+      </ul>
+      <button class="plan-btn">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early" id="early">
+  <div class="early-inner">
+    <div>
+      <p class="section-eyebrow">Limited Beta</p>
+      <h2 class="early-title">Get In<br><span class="lime">Early</span></h2>
+      <p class="early-desc">We're building with coaches now. Join the beta and get free Pro access for 3 months in exchange for your feedback.</p>
+      <ul class="trust-list">
+        <li>No credit card needed to start</li>
+        <li>Your footage stays private</li>
+        <li>Cancel any time</li>
+      </ul>
+    </div>
+    <div>
+      <form class="early-form" onsubmit="return false;">
+        <input type="text" placeholder="Your name" />
+        <input type="email" placeholder="Email address" />
+        <input type="text" placeholder="Club or academy (optional)" />
+        <button type="submit">Request Early Access</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITCH<em>SCOUT</em> AI</div>
+  <div class="footer-copy">© 2025 PitchScout AI. All rights reserved.</div>
+</footer>
+
+<script>
+  // Reveal on scroll
+  const items = document.querySelectorAll('.bento-cell, .plan, .step, .grade-card, .insight-card');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = `opacity 0.55s ${i % 3 * 0.07}s cubic-bezier(0.16,1,0.3,1), transform 0.55s ${i % 3 * 0.07}s cubic-bezier(0.16,1,0.3,1)`;
+      obs.observe(el);
+    });
+  }
+</script>
+</body>
+</html>
