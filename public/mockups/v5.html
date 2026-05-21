@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — CHARGE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white: #FFFFFF;
+    --off: #F4F4F0;
+    --navy: #0A0F2E;
+    --navy2: #0E1540;
+    --orange: #FF5A1F;
+    --orange-light: #FF7A47;
+    --orange-dim: rgba(255,90,31,0.08);
+    --muted: #8896B0;
+    --text: #1A2240;
+    --bebas: 'Bebas Neue', sans-serif;
+    --inter: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--white);
+    color: var(--navy);
+    font-family: var(--inter);
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    background: var(--white);
+    border-bottom: 1.5px solid var(--off);
+  }
+
+  .nav-logo {
+    font-family: var(--bebas);
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+    color: var(--navy);
+    text-decoration: none;
+  }
+  .nav-logo em { color: var(--orange); font-style: normal; }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--navy); }
+
+  .nav-cta {
+    font-family: var(--inter);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--orange);
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .nav-cta:hover { background: var(--orange-light); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(255,90,31,0.25); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 64px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Navy half bg */
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 64px; right: 0; bottom: 0;
+    width: 44%;
+    background: var(--navy);
+    z-index: 0;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 56% 44%;
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+
+  .hero-left {
+    padding: 5rem 4rem 5rem 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 2rem;
+  }
+  .hero-tag::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 2px;
+    background: var(--orange);
+    border-radius: 2px;
+  }
+
+  .hero-title {
+    font-family: var(--bebas);
+    font-size: clamp(5rem, 9vw, 9.5rem);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--navy);
+    margin-bottom: 2.5rem;
+  }
+  .hero-title .orange { color: var(--orange); }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 420px;
+    margin-bottom: 3rem;
+    font-weight: 400;
+  }
+
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+  .btn-orange {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--orange);
+    border: none;
+    padding: 0.9rem 2.2rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    letter-spacing: 0.02em;
+  }
+  .btn-orange:hover { background: var(--orange-light); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,90,31,0.3); }
+  .btn-orange:active { transform: scale(0.97); }
+
+  .btn-outline {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--navy);
+    background: transparent;
+    border: 1.5px solid rgba(10,15,46,0.2);
+    padding: 0.9rem 2.2rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-outline:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* ── HERO STATS BAND ── */
+  .hero-stats {
+    border-top: 1.5px solid var(--off);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--white);
+    position: relative;
+    z-index: 1;
+  }
+  .hero-stat {
+    padding: 2rem 3rem;
+    border-right: 1.5px solid var(--off);
+  }
+  .hero-stat:last-child { border-right: none; }
+  .hero-stat-num {
+    font-family: var(--bebas);
+    font-size: 3rem;
+    letter-spacing: 0.03em;
+    color: var(--navy);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .hero-stat-num em { color: var(--orange); font-style: normal; }
+  .hero-stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  /* Hero right — dark panel with analysis card */
+  .hero-right {
+    background: var(--navy);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-right::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,90,31,0.12), transparent 60%);
+    pointer-events: none;
+  }
+
+  .analysis-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-top: 2px solid var(--orange);
+    padding: 2rem;
+    position: relative;
+  }
+
+  .ac-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .ac-player-name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+  }
+  .ac-player-info {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .ac-grade {
+    font-family: var(--bebas);
+    font-size: 4rem;
+    color: var(--orange);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .ac-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: rgba(255,255,255,0.06);
+    margin-bottom: 1.5rem;
+  }
+  .ac-metric {
+    background: rgba(255,255,255,0.03);
+    padding: 1rem;
+    text-align: center;
+  }
+  .ac-metric-val {
+    font-family: var(--bebas);
+    font-size: 1.8rem;
+    color: var(--white);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .ac-metric-val.pos { color: #4ADE80; }
+  .ac-metric-val.neg { color: #F87171; }
+  .ac-metric-key {
+    font-size: 0.62rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.25rem;
+  }
+
+  .ac-bars { display: flex; flex-direction: column; gap: 0.8rem; }
+  .ac-bar-row { display: flex; align-items: center; gap: 0.8rem; }
+  .ac-bar-name {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted);
+    width: 72px;
+    flex-shrink: 0;
+  }
+  .ac-bar-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .ac-bar-fill {
+    height: 100%;
+    background: var(--orange);
+    border-radius: 2px;
+    width: var(--w);
+  }
+  .ac-bar-val {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--white);
+    width: 26px;
+    text-align: right;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    padding: 7rem 3rem;
+    background: var(--off);
+  }
+  .how-inner { max-width: 1400px; margin: 0 auto; }
+
+  .section-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--bebas);
+    font-size: clamp(3rem, 5.5vw, 6rem);
+    letter-spacing: 0.02em;
+    color: var(--navy);
+    line-height: 0.92;
+    margin-bottom: 4rem;
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(10,15,46,0.08);
+  }
+  .step {
+    background: var(--off);
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.25s;
+    cursor: default;
+  }
+  .step:hover { background: var(--white); }
+  .step::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background 0.25s;
+  }
+  .step:hover::after { background: var(--orange); }
+
+  .step-num {
+    font-family: var(--bebas);
+    font-size: 4rem;
+    color: rgba(10,15,46,0.08);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    transition: color 0.25s;
+    letter-spacing: 0.02em;
+  }
+  .step:hover .step-num { color: var(--orange); opacity: 0.3; }
+
+  .step-title {
+    font-family: var(--bebas);
+    font-size: 1.6rem;
+    color: var(--navy);
+    letter-spacing: 0.04em;
+    margin-bottom: 0.8rem;
+  }
+  .step-desc {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  /* ── FEATURES ── */
+  .features {
+    padding: 7rem 3rem;
+    background: var(--white);
+  }
+  .features-inner { max-width: 1400px; margin: 0 auto; }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1.5px solid var(--off);
+    margin-top: 4rem;
+  }
+  .feature-cell {
+    padding: 3rem;
+    border-right: 1.5px solid var(--off);
+    border-bottom: 1.5px solid var(--off);
+    position: relative;
+    transition: background 0.25s;
+    cursor: default;
+    overflow: hidden;
+  }
+  .feature-cell:nth-child(2n) { border-right: none; }
+  .feature-cell:nth-last-child(-n+2) { border-bottom: none; }
+  .feature-cell:hover { background: var(--orange-dim); }
+
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--navy);
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.25s;
+  }
+  .feature-cell:hover .feature-icon { background: var(--orange); }
+  .feature-icon svg { width: 20px; height: 20px; fill: none; stroke: white; stroke-width: 1.5; stroke-linecap: round; }
+
+  .feature-title {
+    font-family: var(--bebas);
+    font-size: 1.4rem;
+    letter-spacing: 0.04em;
+    color: var(--navy);
+    margin-bottom: 0.6rem;
+  }
+  .feature-desc {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .feature-big {
+    grid-column: span 2;
+    background: var(--navy);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    border-right: none;
+    border-bottom: none;
+  }
+  .feature-big:hover { background: var(--navy2); }
+  .feature-big .feature-title { color: var(--white); }
+  .feature-big .feature-desc { color: var(--muted); max-width: 500px; }
+  .feature-big .feature-icon { background: var(--orange); }
+  .feature-big:hover .feature-icon { background: var(--orange-light); }
+
+  .feature-big-num {
+    font-family: var(--bebas);
+    font-size: 5rem;
+    color: var(--orange);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 7rem 3rem;
+    background: var(--off);
+  }
+  .pricing-inner { max-width: 1400px; margin: 0 auto; }
+
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 4rem;
+  }
+  .plan {
+    background: var(--white);
+    border: 1.5px solid rgba(10,15,46,0.1);
+    padding: 2.5rem;
+    position: relative;
+    border-radius: 2px;
+    transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s;
+    cursor: default;
+  }
+  .plan:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(10,15,46,0.1); }
+  .plan.featured {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--white);
+  }
+  .plan.featured:hover { box-shadow: 0 16px 40px rgba(10,15,46,0.25); }
+
+  .plan-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--orange);
+    background: var(--orange-dim);
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+  .plan.featured .plan-badge {
+    background: rgba(255,90,31,0.2);
+  }
+
+  .plan-price {
+    font-family: var(--bebas);
+    font-size: 4rem;
+    color: var(--navy);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .plan.featured .plan-price { color: var(--white); }
+  .plan-price span { font-size: 1.6rem; vertical-align: top; margin-top: 0.5rem; display: inline-block; color: var(--muted); }
+  .plan-price sub { font-size: 1rem; font-family: var(--inter); font-weight: 400; vertical-align: baseline; color: var(--muted); }
+
+  .plan-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .plan-hr { height: 1.5px; background: rgba(10,15,46,0.07); margin-bottom: 1.5rem; }
+  .plan.featured .plan-hr { background: rgba(255,255,255,0.1); }
+
+  .plan-list { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; margin-bottom: 2.5rem; }
+  .plan-list li {
+    font-size: 0.85rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    opacity: 0.75;
+  }
+  .plan.featured .plan-list li { color: var(--white); }
+  .plan-list li::before {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-6' stroke='%23FF5A1F' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--inter);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 0.85rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+    border: 1.5px solid rgba(10,15,46,0.15);
+    background: transparent;
+    color: var(--navy);
+  }
+  .plan-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .plan.featured .plan-btn {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: var(--white);
+  }
+  .plan.featured .plan-btn:hover { background: var(--orange-light); border-color: var(--orange-light); box-shadow: 0 6px 20px rgba(255,90,31,0.3); }
+
+  /* ── EARLY ACCESS ── */
+  .early {
+    background: var(--navy);
+    padding: 7rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .early::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(255,90,31,0.1), transparent 60%);
+    pointer-events: none;
+  }
+  .early-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .early-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 1.5rem;
+  }
+  .early-title {
+    font-family: var(--bebas);
+    font-size: clamp(3.5rem, 6vw, 6.5rem);
+    letter-spacing: 0.02em;
+    line-height: 0.9;
+    color: var(--white);
+    margin-bottom: 1.5rem;
+  }
+  .early-title em { color: var(--orange); font-style: normal; }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 380px;
+    margin-bottom: 2rem;
+  }
+  .trust-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .trust-list li {
+    font-size: 0.87rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .trust-list li::before {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-6' stroke='%23FF5A1F' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .early-form { display: flex; flex-direction: column; gap: 1rem; }
+  .early-form input {
+    font-family: var(--inter);
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    padding: 0.9rem 1.2rem;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .early-form input:focus { border-color: var(--orange); }
+  .early-form input::placeholder { color: rgba(136,150,176,0.6); }
+  .early-form button {
+    font-family: var(--inter);
+    font-size: 0.9rem;
+    font-weight: 700;
+    background: var(--orange);
+    color: var(--white);
+    border: none;
+    padding: 1.1rem;
+    border-radius: 2px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    margin-top: 0.3rem;
+  }
+  .early-form button:hover { background: var(--orange-light); box-shadow: 0 8px 28px rgba(255,90,31,0.3); transform: translateY(-1px); }
+  .early-form button:active { transform: scale(0.98); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #070C20;
+    padding: 1.8rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-logo {
+    font-family: var(--bebas);
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    color: var(--white);
+  }
+  .footer-logo em { color: var(--orange); font-style: normal; }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); opacity: 0.5; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { display: none; }
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero::after { display: none; }
+    .hero-left { padding: 3rem 0; }
+    .hero-right { background: var(--navy); padding: 2rem; }
+    .hero-stats { grid-template-columns: 1fr 1fr 1fr; }
+    .hero-stat { padding: 1.5rem; }
+    .how { padding: 4rem 1.5rem; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .features { padding: 4rem 1.5rem; }
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-cell:nth-child(2n) { border-right: 1.5px solid var(--off); }
+    .feature-big { grid-column: span 1; flex-direction: column; align-items: flex-start; }
+    .pricing { padding: 4rem 1.5rem; }
+    .plans { grid-template-columns: 1fr; }
+    .early { padding: 4rem 1.5rem; }
+    .early-inner { grid-template-columns: 1fr; gap: 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; padding: 1.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PITCH<em>SCOUT</em></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="nav-cta">Get Early Access</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <p class="hero-tag">AI Soccer Analysis</p>
+      <h1 class="hero-title">
+        KNOW<br>
+        YOUR<br>
+        <span class="orange">PLAYER.</span>
+      </h1>
+      <p class="hero-desc">
+        Upload any match footage, enter a jersey number, and get a deep AI-generated performance report in minutes. Built for youth soccer coaches.
+      </p>
+      <div class="hero-actions">
+        <button class="btn-orange">Start Free Analysis</button>
+        <button class="btn-outline">See Sample Report</button>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="analysis-card">
+        <div class="ac-header">
+          <div>
+            <div class="ac-player-name">Lena Osei-Kwame</div>
+            <div class="ac-player-info">Right Winger · #9 · U14 · 04.12.25</div>
+          </div>
+          <div class="ac-grade">A-</div>
+        </div>
+        <div class="ac-metrics">
+          <div class="ac-metric">
+            <div class="ac-metric-val pos">89%</div>
+            <div class="ac-metric-key">Pass Acc.</div>
+          </div>
+          <div class="ac-metric">
+            <div class="ac-metric-val">43</div>
+            <div class="ac-metric-key">Touches</div>
+          </div>
+          <div class="ac-metric">
+            <div class="ac-metric-val pos">+11</div>
+            <div class="ac-metric-key">Pressures</div>
+          </div>
+        </div>
+        <div class="ac-bars">
+          <div class="ac-bar-row">
+            <span class="ac-bar-name">Ball Control</span>
+            <div class="ac-bar-track"><div class="ac-bar-fill" style="--w: 88%"></div></div>
+            <span class="ac-bar-val">88</span>
+          </div>
+          <div class="ac-bar-row">
+            <span class="ac-bar-name">Passing</span>
+            <div class="ac-bar-track"><div class="ac-bar-fill" style="--w: 89%"></div></div>
+            <span class="ac-bar-val">89</span>
+          </div>
+          <div class="ac-bar-row">
+            <span class="ac-bar-name">Work Rate</span>
+            <div class="ac-bar-track"><div class="ac-bar-fill" style="--w: 82%"></div></div>
+            <span class="ac-bar-val">82</span>
+          </div>
+          <div class="ac-bar-row">
+            <span class="ac-bar-name">Decisions</span>
+            <div class="ac-bar-track"><div class="ac-bar-fill" style="--w: 76%"></div></div>
+            <span class="ac-bar-val">76</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">2<em>min</em></div>
+      <div class="hero-stat-label">Average report time</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">38<em>+</em></div>
+      <div class="hero-stat-label">Data points per report</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">94<em>%</em></div>
+      <div class="hero-stat-label">Detection accuracy</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <p class="section-kicker">The Process</p>
+    <h2 class="section-title">THREE STEPS<br>TO FULL INTEL</h2>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3 class="step-title">UPLOAD FOOTAGE</h3>
+        <p class="step-desc">Drop any game or practice video. Phone footage from the sideline works fine. We handle MP4, MOV, and most common formats.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3 class="step-title">ENTER A JERSEY NUMBER</h3>
+        <p class="step-desc">Just the number. Our AI automatically identifies and tracks that player throughout the entire video — no manual annotation needed.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3 class="step-title">READ THE REPORT</h3>
+        <p class="step-desc">Get a structured, graded analysis — pass accuracy, pressing, decision speed, positional patterns, and development notes — all timestamped.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-inner">
+    <p class="section-kicker">What You Get</p>
+    <h2 class="section-title">BUILT FOR<br>COACHES</h2>
+    <div class="features-grid">
+      <div class="feature-cell">
+        <div class="feature-icon">
+          <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3"/></svg>
+        </div>
+        <h3 class="feature-title">JERSEY DETECTION</h3>
+        <p class="feature-desc">Computer vision trained on real youth soccer footage. Identifies and tracks a player by number alone — no wearables, no markers.</p>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">
+          <svg viewBox="0 0 20 20"><polyline points="4,14 8,9 12,12 16,6"/><line x1="2" y1="18" x2="18" y2="18"/></svg>
+        </div>
+        <h3 class="feature-title">PROGRESS TRACKING</h3>
+        <p class="feature-desc">Upload multiple matches and track how a player develops across the season — trends over time, not just single snapshots.</p>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">
+          <svg viewBox="0 0 20 20"><path d="M4 4h12v12H4z"/><path d="M8 8h4v4H8z"/></svg>
+        </div>
+        <h3 class="feature-title">SHAREABLE REPORTS</h3>
+        <p class="feature-desc">Every report gets a clean link. Share directly with players, parents, or your technical director. No login needed to view.</p>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">
+          <svg viewBox="0 0 20 20"><circle cx="10" cy="7" r="3"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+        </div>
+        <h3 class="feature-title">WORKS WITH ANY FOOTAGE</h3>
+        <p class="feature-desc">Phone recording. Tripod. Stadium feed. If the player is visible, we can analyze them — no minimum production quality required.</p>
+      </div>
+      <div class="feature-cell feature-big">
+        <div>
+          <div class="feature-icon">
+            <svg viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" rx="2"/><path d="M7 10h6M10 7v6"/></svg>
+          </div>
+          <h3 class="feature-title">38+ DATA POINTS PER REPORT</h3>
+          <p class="feature-desc">From basic pass accuracy to complex off-ball movement patterns, pressing intensity, and decision speed — every metric a youth coach needs.</p>
+        </div>
+        <div class="feature-big-num">38+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-inner">
+    <p class="section-kicker">Plans</p>
+    <h2 class="section-title">SIMPLE<br>PRICING</h2>
+    <div class="plans">
+      <div class="plan">
+        <div class="plan-badge">Free</div>
+        <div class="plan-price"><span>$</span>0<sub>/mo</sub></div>
+        <p class="plan-desc">Try PitchScout with 3 full analyses every month at no cost.</p>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li>3 player analyses/month</li>
+          <li>Basic performance report</li>
+          <li>7-day data retention</li>
+          <li>Email delivery</li>
+        </ul>
+        <button class="plan-btn">Get Started Free</button>
+      </div>
+      <div class="plan featured">
+        <div class="plan-badge">Pro — Most Popular</div>
+        <div class="plan-price"><span>$</span>29<sub>/mo</sub></div>
+        <p class="plan-desc">Unlimited analyses. Everything a dedicated coach needs.</p>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li>Unlimited analyses</li>
+          <li>Full tactical report</li>
+          <li>Progress tracking</li>
+          <li>Shareable report links</li>
+          <li>Video timestamps</li>
+          <li>Priority processing</li>
+        </ul>
+        <button class="plan-btn">Start 14-Day Trial</button>
+      </div>
+      <div class="plan">
+        <div class="plan-badge">Club</div>
+        <div class="plan-price"><span>$</span>99<sub>/mo</sub></div>
+        <p class="plan-desc">Multi-coach access for academies and development clubs.</p>
+        <div class="plan-hr"></div>
+        <ul class="plan-list">
+          <li>Everything in Pro</li>
+          <li>Up to 10 coach accounts</li>
+          <li>Club analytics dashboard</li>
+          <li>API access</li>
+          <li>Dedicated support</li>
+        </ul>
+        <button class="plan-btn">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early" id="early">
+  <div class="early-inner">
+    <div>
+      <p class="early-kicker">Beta Programme</p>
+      <h2 class="early-title">JOIN<br><em>EARLY.</em><br>BUILD<br>WITH US.</h2>
+      <p class="early-desc">We're onboarding coaches right now. Get free Pro access for 3 months in exchange for your real feedback.</p>
+      <ul class="trust-list">
+        <li>No credit card required</li>
+        <li>Your footage stays private</li>
+        <li>Cancel any time</li>
+      </ul>
+    </div>
+    <div>
+      <form class="early-form" onsubmit="return false;">
+        <input type="text" placeholder="Your name" />
+        <input type="email" placeholder="Email address" />
+        <input type="text" placeholder="Club or team (optional)" />
+        <button type="submit">Request Early Access →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITCH<em>SCOUT</em> AI</div>
+  <div class="footer-copy">© 2025 PitchScout AI. All rights reserved.</div>
+</footer>
+
+<script>
+  const items = document.querySelectorAll('.step, .feature-cell, .plan');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      el.style.transition = `opacity 0.5s ${(i % 3) * 0.07}s cubic-bezier(0.16,1,0.3,1), transform 0.5s ${(i % 3) * 0.07}s cubic-bezier(0.16,1,0.3,1)`;
+      obs.observe(el);
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — FIELD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pitch: #061209;
+    --pitch2: #0C1F10;
+    --pitch3: #112214;
+    --gold: #D4A843;
+    --gold-dim: rgba(212,168,67,0.12);
+    --gold-light: #F0C96B;
+    --cream: #EDE8DC;
+    --muted: #6B7A6E;
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--pitch);
+    color: var(--cream);
+    font-family: var(--sans);
+    overflow-x: hidden;
+  }
+
+  /* Subtle pitch texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 72px,
+      rgba(212,168,67,0.018) 72px,
+      rgba(212,168,67,0.018) 73px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    background: rgba(6,18,9,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(212,168,67,0.12);
+  }
+
+  .nav-logo {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--cream);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+  }
+  .nav-logo em { color: var(--gold); font-style: italic; }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--cream); }
+
+  .nav-cta {
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--pitch);
+    background: var(--gold);
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 68px;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 58% 42%;
+  }
+
+  .hero-left {
+    padding: 5rem 3rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid rgba(212,168,67,0.1);
+    position: relative;
+  }
+
+  .hero-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2.5rem;
+  }
+  .hero-kicker::before {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(3rem, 5.5vw, 5.8rem);
+    font-weight: 900;
+    line-height: 1.0;
+    color: var(--cream);
+    margin-bottom: 2rem;
+    letter-spacing: -0.01em;
+  }
+  .hero-title em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--muted);
+    max-width: 460px;
+    margin-bottom: 3rem;
+    font-weight: 400;
+  }
+
+  .hero-actions { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+
+  .btn-gold {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--pitch);
+    background: var(--gold);
+    border: none;
+    padding: 0.9rem 2.2rem;
+    border-radius: 1px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    letter-spacing: 0.02em;
+  }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(212,168,67,0.25); }
+  .btn-gold:active { transform: scale(0.97); }
+
+  .btn-ghost-gold {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--gold);
+    background: transparent;
+    border: 1px solid rgba(212,168,67,0.3);
+    padding: 0.9rem 2.2rem;
+    border-radius: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .btn-ghost-gold:hover { border-color: var(--gold); background: var(--gold-dim); }
+
+  .hero-stats {
+    margin-top: auto;
+    padding-top: 3rem;
+    border-top: 1px solid rgba(212,168,67,0.1);
+    display: flex;
+    gap: 3rem;
+  }
+  .hero-stat {}
+  .hero-stat-num {
+    font-family: var(--serif);
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .hero-stat-num em { color: var(--gold); font-style: normal; }
+  .hero-stat-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 0.3rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* Hero right — stacked report card */
+  .hero-right {
+    background: var(--pitch2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-right::before {
+    content: '';
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(212,168,67,0.08), transparent 65%);
+    pointer-events: none;
+  }
+
+  .report-top {
+    padding: 2.5rem;
+    border-bottom: 1px solid rgba(212,168,67,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .report-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+  .report-player-name {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.2rem;
+  }
+  .report-player-info {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .grade-large {
+    font-family: var(--serif);
+    font-size: 5rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -0.04em;
+    text-shadow: 0 0 40px rgba(212,168,67,0.2);
+  }
+
+  .report-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .r-metric {
+    padding: 1.5rem 2.5rem;
+    border-right: 1px solid rgba(212,168,67,0.08);
+    border-bottom: 1px solid rgba(212,168,67,0.08);
+  }
+  .r-metric:nth-child(2n) { border-right: none; }
+  .r-metric-val {
+    font-family: var(--serif);
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .r-metric-val.pos { color: var(--gold); }
+  .r-metric-val.neg { color: #D97A5A; }
+  .r-metric-key {
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+  }
+
+  .report-obs-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .r-obs {
+    padding: 1.4rem 2.5rem;
+    border-bottom: 1px solid rgba(212,168,67,0.08);
+    display: flex;
+    gap: 1rem;
+    cursor: default;
+    transition: background 0.2s;
+  }
+  .r-obs:last-child { border-bottom: none; }
+  .r-obs:hover { background: rgba(212,168,67,0.03); }
+  .r-obs-bar {
+    width: 2px;
+    background: var(--muted);
+    border-radius: 2px;
+    flex-shrink: 0;
+    margin: 2px 0;
+  }
+  .r-obs-bar.pos { background: var(--gold); }
+  .r-obs-bar.neg { background: #D97A5A; }
+  .r-obs-bar.info { background: #7AADCC; }
+  .r-obs-content {}
+  .r-obs-type {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+  .r-obs-bar.pos ~ .r-obs-content .r-obs-type { color: var(--gold); }
+  .r-obs-bar.neg ~ .r-obs-content .r-obs-type { color: #D97A5A; }
+  .r-obs-bar.info ~ .r-obs-content .r-obs-type { color: #7AADCC; }
+  .r-obs-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: rgba(237,232,220,0.6);
+  }
+
+  /* ── SECTION BASE ── */
+  section { position: relative; z-index: 1; }
+
+  .section-rule {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+  }
+  .section-rule::before {
+    content: '';
+    display: block;
+    width: 2rem;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.6;
+  }
+  .section-rule span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 4vw, 4rem);
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    padding: 7rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .how-header { margin-bottom: 4rem; }
+
+  .steps-list { display: flex; flex-direction: column; }
+  .step {
+    display: grid;
+    grid-template-columns: 80px 1fr 220px;
+    align-items: start;
+    gap: 3rem;
+    padding: 2.5rem 0;
+    border-top: 1px solid rgba(212,168,67,0.1);
+    transition: padding-left 0.35s cubic-bezier(0.16,1,0.3,1);
+    cursor: default;
+  }
+  .step:hover { padding-left: 1rem; }
+
+  .step-num {
+    font-family: var(--serif);
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: rgba(212,168,67,0.15);
+    line-height: 1;
+    transition: color 0.3s;
+    padding-top: 0.2rem;
+  }
+  .step:hover .step-num { color: var(--gold); }
+
+  .step-title {
+    font-family: var(--serif);
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+    margin-bottom: 0.6rem;
+    line-height: 1.1;
+  }
+  .step-desc {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: var(--muted);
+    max-width: 440px;
+  }
+  .step-callout {
+    background: var(--pitch3);
+    border: 1px solid rgba(212,168,67,0.12);
+    padding: 1rem 1.3rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+    border-left: 2px solid var(--gold);
+    margin-top: 0.3rem;
+  }
+  .step-callout strong { color: var(--gold); font-weight: 600; display: block; margin-bottom: 0.2rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  /* ── ANALYSIS SAMPLE ── */
+  .analysis {
+    background: var(--pitch2);
+    border-top: 1px solid rgba(212,168,67,0.08);
+    border-bottom: 1px solid rgba(212,168,67,0.08);
+    padding: 7rem 3rem;
+  }
+  .analysis-inner { max-width: 1400px; margin: 0 auto; }
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 4rem;
+    margin-top: 4rem;
+    align-items: start;
+  }
+
+  .player-card {
+    background: var(--pitch3);
+    border: 1px solid rgba(212,168,67,0.1);
+    padding: 2rem;
+    position: sticky;
+    top: 90px;
+  }
+  .player-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(212,168,67,0.1);
+    margin-bottom: 1.5rem;
+  }
+  .player-card-name {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+  }
+  .player-card-pos {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    font-weight: 500;
+  }
+  .player-card-grade {
+    font-family: var(--serif);
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .skill-bars { display: flex; flex-direction: column; gap: 1rem; }
+  .skill-bar {}
+  .skill-bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.02em;
+  }
+  .skill-bar-header span:last-child { color: var(--cream); font-weight: 600; }
+  .skill-track {
+    height: 3px;
+    background: rgba(255,255,255,0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .skill-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    width: var(--w);
+    transition: none;
+  }
+
+  .observations-col { display: flex; flex-direction: column; gap: 1.2rem; }
+  .obs-card {
+    background: var(--pitch3);
+    border: 1px solid rgba(212,168,67,0.08);
+    padding: 1.5rem;
+    border-left: 3px solid var(--muted);
+    transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), border-left-color 0.2s;
+    cursor: default;
+  }
+  .obs-card:hover { transform: translateX(6px); }
+  .obs-card.pos { border-left-color: var(--gold); }
+  .obs-card.neg { border-left-color: #D97A5A; }
+  .obs-card.info { border-left-color: #7AADCC; }
+  .obs-card-label {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .obs-card.pos .obs-card-label { color: var(--gold); }
+  .obs-card.neg .obs-card-label { color: #D97A5A; }
+  .obs-card.info .obs-card-label { color: #7AADCC; }
+  .obs-card-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(237,232,220,0.65);
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 7rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .pricing-header { margin-bottom: 4rem; }
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid rgba(212,168,67,0.1);
+  }
+  .plan {
+    padding: 2.5rem;
+    border-right: 1px solid rgba(212,168,67,0.1);
+    position: relative;
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .plan:last-child { border-right: none; }
+  .plan.featured { background: var(--pitch2); }
+  .plan.featured::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  }
+
+  .plan-tier {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .plan.featured .plan-tier { color: var(--gold); }
+  .plan-price {
+    font-family: var(--serif);
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .plan-price span { font-size: 1.4rem; vertical-align: top; margin-top: 0.5rem; display: inline-block; color: var(--muted); }
+  .plan-price sub { font-size: 1rem; font-weight: 400; font-family: var(--sans); color: var(--muted); vertical-align: baseline; }
+  .plan-desc { font-size: 0.88rem; line-height: 1.55; color: var(--muted); margin-bottom: 2rem; }
+  .plan-hr { height: 1px; background: rgba(212,168,67,0.1); margin-bottom: 1.5rem; }
+  .plan-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2.5rem; }
+  .plan-list li {
+    font-size: 0.85rem;
+    color: rgba(237,232,220,0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .plan-list li::before {
+    content: '—';
+    color: var(--gold);
+    font-weight: 700;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+  .plan-btn {
+    width: 100%;
+    font-family: var(--sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.85rem;
+    border: 1px solid rgba(212,168,67,0.2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 1px;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .plan-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .plan.featured .plan-btn {
+    background: var(--gold);
+    color: var(--pitch);
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+  .plan.featured .plan-btn:hover { background: var(--gold-light); border-color: var(--gold-light); }
+
+  /* ── EARLY ACCESS ── */
+  .early {
+    background: var(--pitch2);
+    border-top: 1px solid rgba(212,168,67,0.08);
+    padding: 7rem 3rem;
+  }
+  .early-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8rem;
+    align-items: center;
+  }
+  .early-title {
+    font-family: var(--serif);
+    font-size: clamp(2.8rem, 4.5vw, 4.8rem);
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+    line-height: 1.0;
+    margin-bottom: 1.5rem;
+  }
+  .early-title em { color: var(--gold); font-style: italic; }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--muted);
+    max-width: 380px;
+    margin-bottom: 2rem;
+  }
+  .trust-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+  .trust-list li {
+    font-size: 0.87rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .trust-list li::before { content: '✓'; color: var(--gold); font-weight: 700; }
+
+  .early-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid rgba(212,168,67,0.12);
+  }
+  .form-row {
+    position: relative;
+    border-bottom: 1px solid rgba(212,168,67,0.1);
+  }
+  .form-row:last-of-type { border-bottom: none; }
+  .form-row label {
+    position: absolute;
+    top: 0.85rem; left: 1.5rem;
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+  .form-row:focus-within label { color: var(--gold); }
+  .form-row input {
+    width: 100%;
+    padding: 2rem 1.5rem 0.75rem;
+    background: transparent;
+    border: none;
+    color: var(--cream);
+    font-family: var(--sans);
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .form-row input::placeholder { color: rgba(107,122,110,0.5); }
+  .form-submit {
+    padding: 1.2rem;
+    background: var(--gold);
+    color: var(--pitch);
+    border: none;
+    font-family: var(--sans);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+  }
+  .form-submit:hover { background: var(--gold-light); box-shadow: 0 8px 28px rgba(212,168,67,0.2); }
+  .form-submit:active { transform: scale(0.98); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2rem 3rem;
+    border-top: 1px solid rgba(212,168,67,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+  }
+  .footer-logo em { color: var(--gold); font-style: italic; }
+  .footer-copy { font-size: 0.75rem; color: var(--muted); opacity: 0.6; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { padding: 3rem 1.5rem; border-right: none; border-bottom: 1px solid rgba(212,168,67,0.1); }
+    .hero-right { min-height: 500px; }
+    .how { padding: 4rem 1.5rem; }
+    .step { grid-template-columns: 60px 1fr; gap: 1.5rem; }
+    .step-callout { display: none; }
+    .analysis { padding: 4rem 1.5rem; }
+    .analysis-grid { grid-template-columns: 1fr; }
+    .player-card { position: static; }
+    .pricing { padding: 4rem 1.5rem; }
+    .plans { grid-template-columns: 1fr; }
+    .plan { border-right: none; border-bottom: 1px solid rgba(212,168,67,0.1); }
+    .plan:last-child { border-bottom: none; }
+    .early { padding: 4rem 1.5rem; }
+    .early-inner { grid-template-columns: 1fr; gap: 3rem; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; padding: 1.5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PitchScout <em>AI</em></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#analysis">Analysis</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <button class="nav-cta">Get Early Access</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <p class="hero-kicker"><span>Youth Soccer Intelligence</span></p>
+    <h1 class="hero-title">
+      Read the<br>
+      <em>Whole</em><br>
+      Player.
+    </h1>
+    <p class="hero-desc">
+      Upload any match footage. Enter a jersey number. Our AI tracks that player and delivers a deep performance report — strengths, development areas, tactical observations — in minutes.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-gold">Start Analyzing</button>
+      <button class="btn-ghost-gold">View Sample Report</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">2<em>m</em></div>
+        <div class="hero-stat-label">Average processing time</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">38<em>+</em></div>
+        <div class="hero-stat-label">Data points per report</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">94<em>%</em></div>
+        <div class="hero-stat-label">Detection accuracy</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="report-top">
+      <div>
+        <div class="report-label">Player Report</div>
+        <div class="report-player-name">Tobias Mensah-Quartey</div>
+        <div class="report-player-info">Centre Midfielder · #6 · U15 · 04.12.25</div>
+      </div>
+      <div class="grade-large">B+</div>
+    </div>
+
+    <div class="report-metrics">
+      <div class="r-metric">
+        <div class="r-metric-val pos">87%</div>
+        <div class="r-metric-key">Pass Accuracy</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-metric-val">52</div>
+        <div class="r-metric-key">Touches</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-metric-val pos">+12</div>
+        <div class="r-metric-key">Pressures Won</div>
+      </div>
+      <div class="r-metric">
+        <div class="r-metric-val neg">−2</div>
+        <div class="r-metric-key">Turnovers</div>
+      </div>
+    </div>
+
+    <div class="report-obs-list">
+      <div class="r-obs">
+        <div class="r-obs-bar pos"></div>
+        <div class="r-obs-content">
+          <div class="r-obs-type">Strength</div>
+          <p class="r-obs-text">Exceptional passing range — 87% accuracy with 5 successful switches of play across both halves.</p>
+        </div>
+      </div>
+      <div class="r-obs">
+        <div class="r-obs-bar pos"></div>
+        <div class="r-obs-content">
+          <div class="r-obs-type">Strength</div>
+          <p class="r-obs-text">Consistent high press — 12 pressures in opponent's half, winning 8. Top quartile for age group.</p>
+        </div>
+      </div>
+      <div class="r-obs">
+        <div class="r-obs-bar neg"></div>
+        <div class="r-obs-content">
+          <div class="r-obs-type">Development Area</div>
+          <p class="r-obs-text">Positional drops in transition — 2 turnovers led to direct counterattacks due to recovery position.</p>
+        </div>
+      </div>
+      <div class="r-obs">
+        <div class="r-obs-bar info"></div>
+        <div class="r-obs-content">
+          <div class="r-obs-type">Tactical Note</div>
+          <p class="r-obs-text">Strong affinity for the right half-space. Consider building structured patterns around this preference.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-header">
+    <div class="section-rule"><span>The Process</span></div>
+    <h2 class="section-title">Three steps<br>to full intel</h2>
+  </div>
+  <div class="steps-list">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div>
+        <h3 class="step-title">Upload the Footage</h3>
+        <p class="step-desc">Drop any video file — full match or a clip. MP4, MOV, most formats. No professional camera needed. Sideline phone footage is enough.</p>
+      </div>
+      <div class="step-callout"><strong>Any Camera Works</strong> Phone, tripod, coach cam, or stadium feed — if the player is visible, the AI can track them.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div>
+        <h3 class="step-title">Enter a Jersey Number</h3>
+        <p class="step-desc">Just the number. The AI identifies and tracks that player automatically across the entire video — no manual annotation or tagging.</p>
+      </div>
+      <div class="step-callout"><strong>AI Jersey Detection</strong> Computer vision trained on real youth soccer footage. Works in crowded scenes and poor lighting conditions.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div>
+        <h3 class="step-title">Read the Report</h3>
+        <p class="step-desc">Receive a graded, timestamped report: strengths, development areas, tactical patterns, pass accuracy, pressing activity. Share with one link.</p>
+      </div>
+      <div class="step-callout"><strong>Ready in Minutes</strong> Average report delivery is under 2 minutes. No specialist training needed to read it.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ANALYSIS -->
+<section class="analysis" id="analysis">
+  <div class="analysis-inner">
+    <div class="section-rule"><span>Sample Report</span></div>
+    <h2 class="section-title">What you receive</h2>
+    <div class="analysis-grid">
+      <div>
+        <div class="player-card">
+          <div class="player-card-top">
+            <div>
+              <div class="player-card-name">Marcus T.</div>
+              <div class="player-card-pos">Central Midfielder · #7 · U14</div>
+            </div>
+            <div class="player-card-grade">B+</div>
+          </div>
+          <div class="skill-bars">
+            <div class="skill-bar">
+              <div class="skill-bar-header"><span>Ball Control</span><span>82</span></div>
+              <div class="skill-track"><div class="skill-fill" style="--w: 82%"></div></div>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-bar-header"><span>Passing</span><span>87</span></div>
+              <div class="skill-track"><div class="skill-fill" style="--w: 87%"></div></div>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-bar-header"><span>Work Rate</span><span>91</span></div>
+              <div class="skill-track"><div class="skill-fill" style="--w: 91%"></div></div>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-bar-header"><span>Decision Speed</span><span>74</span></div>
+              <div class="skill-track"><div class="skill-fill" style="--w: 74%"></div></div>
+            </div>
+            <div class="skill-bar">
+              <div class="skill-bar-header"><span>Pressing</span><span>78</span></div>
+              <div class="skill-track"><div class="skill-fill" style="--w: 78%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="observations-col">
+        <div class="obs-card pos">
+          <div class="obs-card-label">Strength Identified</div>
+          <p class="obs-card-text">Exceptional passing range under pressure — maintained 87% accuracy across 34 attempts, including 6 successful line-breaking passes in the second half.</p>
+        </div>
+        <div class="obs-card pos">
+          <div class="obs-card-label">Strength Identified</div>
+          <p class="obs-card-text">Strong off-ball movement in the final third. Consistently created space for teammates — 14 runs tracked, 9 resulting in a direct passing option.</p>
+        </div>
+        <div class="obs-card neg">
+          <div class="obs-card-label">Development Area</div>
+          <p class="obs-card-text">Decision speed in 1v1 situations was below positional average. 3 turnovers in transition linked to holding the ball 0.8s longer than optimal.</p>
+        </div>
+        <div class="obs-card info">
+          <div class="obs-card-label">Tactical Note</div>
+          <p class="obs-card-text">Dropped deeper than expected for the role. Could benefit from structured pressing drills targeting zones 4-A and 5-B to improve defensive shape in transition.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <div class="section-rule"><span>Plans</span></div>
+    <h2 class="section-title">Simple, honest pricing</h2>
+  </div>
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-tier">Free</div>
+      <div class="plan-price"><span>$</span>0<sub>/mo</sub></div>
+      <p class="plan-desc">Try PitchScout. Three full analyses per month at no cost.</p>
+      <div class="plan-hr"></div>
+      <ul class="plan-list">
+        <li>3 player analyses/month</li>
+        <li>Basic performance report</li>
+        <li>7-day data retention</li>
+        <li>Email delivery</li>
+      </ul>
+      <button class="plan-btn">Get Started Free</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-tier">Pro — Most Popular</div>
+      <div class="plan-price"><span>$</span>29<sub>/mo</sub></div>
+      <p class="plan-desc">Unlimited analyses. Everything a committed coach needs for a full squad.</p>
+      <div class="plan-hr"></div>
+      <ul class="plan-list">
+        <li>Unlimited analyses</li>
+        <li>Full tactical report</li>
+        <li>Progress tracking</li>
+        <li>Shareable report links</li>
+        <li>Video timestamps</li>
+        <li>Priority processing</li>
+      </ul>
+      <button class="plan-btn">Start Free Trial</button>
+    </div>
+    <div class="plan">
+      <div class="plan-tier">Club</div>
+      <div class="plan-price"><span>$</span>99<sub>/mo</sub></div>
+      <p class="plan-desc">Multi-coach access for academies, clubs, and development programmes.</p>
+      <div class="plan-hr"></div>
+      <ul class="plan-list">
+        <li>Everything in Pro</li>
+        <li>Up to 10 coach accounts</li>
+        <li>Club analytics dashboard</li>
+        <li>API access</li>
+        <li>Priority support</li>
+      </ul>
+      <button class="plan-btn">Contact Sales</button>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early">
+  <div class="early-inner">
+    <div>
+      <div class="section-rule"><span>Beta Programme</span></div>
+      <h2 class="early-title">
+        Join the<br>
+        coaches<br>
+        building <em>this</em>.
+      </h2>
+      <p class="early-desc">We're onboarding coaches and scouts now. Get free Pro access for three months while you help us shape the product.</p>
+      <ul class="trust-list">
+        <li>No credit card required to start</li>
+        <li>Your footage is never shared beyond analysis</li>
+        <li>Cancel any time, no contracts</li>
+      </ul>
+    </div>
+    <div>
+      <form onsubmit="return false;">
+        <div class="early-form">
+          <div class="form-row">
+            <label for="f-name">Full Name</label>
+            <input type="text" id="f-name" placeholder="Your name" />
+          </div>
+          <div class="form-row">
+            <label for="f-email">Email Address</label>
+            <input type="email" id="f-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-row">
+            <label for="f-club">Club or Team</label>
+            <input type="text" id="f-club" placeholder="Optional" />
+          </div>
+          <button type="submit" class="form-submit">Request Early Access →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PitchScout <em>AI</em></div>
+  <div class="footer-copy">© 2025 PitchScout AI. All rights reserved.</div>
+</footer>
+
+<script>
+  const items = document.querySelectorAll('.step, .obs-card, .plan, .r-obs');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(14px)';
+      el.style.transition = `opacity 0.6s ${(i % 3) * 0.07}s cubic-bezier(0.16,1,0.3,1), transform 0.6s ${(i % 3) * 0.07}s cubic-bezier(0.16,1,0.3,1)`;
+      obs.observe(el);
+    });
+  }
+</script>
+</body>
+</html>

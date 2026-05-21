@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PitchScout AI — WIRE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper: #F2EDE4;
+    --paper2: #EBE5DB;
+    --ink: #0F0E0C;
+    --ink2: #1E1C18;
+    --red: #CC1A1A;
+    --muted: #7A7168;
+    --mono: 'Space Mono', monospace;
+    --grotesk: 'Space Grotesk', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--grotesk);
+    overflow-x: hidden;
+  }
+
+  /* Subtle grain — pointer-events-none, fixed pseudo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2.5rem;
+    background: var(--paper);
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+  }
+  .nav-logo em { color: var(--red); font-style: normal; }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.15s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+
+  .nav-cta {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--paper);
+    background: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .nav-cta:hover { background: var(--red); border-color: var(--red); }
+  .nav-cta:active { transform: scale(0.97); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100dvh;
+    padding-top: 60px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .hero-left {
+    padding: 5rem 3rem 5rem 2.5rem;
+    border-right: 2px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .hero-index {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .hero-index::before {
+    content: '001';
+    color: var(--red);
+    font-weight: 700;
+  }
+  .hero-index::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.15;
+  }
+
+  .hero-title {
+    font-family: var(--mono);
+    font-size: clamp(2.8rem, 5.5vw, 6rem);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .hero-title .red { color: var(--red); }
+  .hero-title .outline {
+    -webkit-text-stroke: 2px var(--ink);
+    color: transparent;
+  }
+
+  .hero-desc-block {
+    margin-top: 3rem;
+  }
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 380px;
+    margin-bottom: 2.5rem;
+  }
+
+  .hero-cta-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-ink {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--paper);
+    background: var(--ink);
+    border: 2px solid var(--ink);
+    padding: 0.85rem 2rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-ink:hover { background: var(--red); border-color: var(--red); }
+  .btn-ink:active { transform: scale(0.97); }
+
+  .btn-bare {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: transparent;
+    border: 2px solid var(--ink);
+    padding: 0.85rem 2rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-bare:hover { border-color: var(--red); color: var(--red); }
+
+  .hero-footnote {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    border-top: 1px solid rgba(15,14,12,0.15);
+    padding-top: 1.5rem;
+    display: flex;
+    gap: 2.5rem;
+  }
+  .hero-fn-item strong { display: block; font-size: 1.1rem; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; font-family: var(--grotesk); }
+
+  /* Hero right — raw data panel */
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .report-header-raw {
+    padding: 2rem 2.5rem;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .rhr-left {}
+  .rhr-label {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .rhr-player {
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  .rhr-info {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+    letter-spacing: 0.04em;
+  }
+  .rhr-grade {
+    font-family: var(--mono);
+    font-size: 5rem;
+    font-weight: 700;
+    color: var(--red);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  /* Data table */
+  .data-table {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 2px solid var(--ink);
+  }
+  .dt-cell {
+    padding: 1.5rem;
+    border-right: 1px solid rgba(15,14,12,0.15);
+  }
+  .dt-cell:last-child { border-right: none; }
+  .dt-val {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .dt-val.pos { color: #1A6B2E; }
+  .dt-val.neg { color: var(--red); }
+  .dt-key {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+  }
+
+  /* Observations as raw lines */
+  .obs-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .obs-entry {
+    padding: 1.4rem 2.5rem;
+    border-bottom: 1px solid rgba(15,14,12,0.12);
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .obs-entry:hover { background: rgba(15,14,12,0.03); }
+  .obs-entry:last-child { border-bottom: none; }
+  .obs-type-tag {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid currentColor;
+    padding: 0.2rem 0.4rem;
+    margin-top: 0.15rem;
+    display: inline-block;
+    line-height: 1.3;
+  }
+  .obs-type-tag.pos { color: #1A6B2E; }
+  .obs-type-tag.neg { color: var(--red); }
+  .obs-type-tag.info { color: #1A4A6B; }
+  .obs-text {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--ink);
+    opacity: 0.7;
+  }
+
+  /* ── HOW IT WORKS ── */
+  .how {
+    border-bottom: 2px solid var(--ink);
+  }
+  .how-header {
+    padding: 3.5rem 2.5rem 2.5rem;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .how-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+  .how-title {
+    font-family: var(--mono);
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+  }
+  .how-count {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    align-self: flex-end;
+  }
+
+  .steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .step {
+    padding: 3rem 2.5rem;
+    border-right: 2px solid var(--ink);
+    position: relative;
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .step:last-child { border-right: none; }
+  .step:hover { background: var(--paper2); }
+
+  .step-n {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+
+  .step-title {
+    font-family: var(--mono);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+  }
+
+  .step-desc {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--muted);
+  }
+
+  .step-aside {
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    border-left: 2px solid var(--red);
+    padding-left: 0.8rem;
+  }
+
+  /* ── FEATURES AS TABLE ── */
+  .features {
+    border-bottom: 2px solid var(--ink);
+  }
+  .features-header {
+    padding: 3.5rem 2.5rem 2.5rem;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .features-label { font-family: var(--mono); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); }
+  .features-title { font-family: var(--mono); font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: 700; color: var(--ink); letter-spacing: -0.03em; line-height: 1.0; }
+
+  .feature-table {
+    display: flex;
+    flex-direction: column;
+  }
+  .feature-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 120px;
+    border-bottom: 1px solid rgba(15,14,12,0.12);
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .feature-row:hover { background: var(--paper2); }
+  .feature-row:last-child { border-bottom: 2px solid var(--ink); }
+
+  .fr-name {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    padding: 1.8rem 2.5rem;
+    border-right: 1px solid rgba(15,14,12,0.12);
+    display: flex;
+    align-items: center;
+  }
+
+  .fr-desc {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--muted);
+    padding: 1.8rem 2rem;
+    border-right: 1px solid rgba(15,14,12,0.12);
+    display: flex;
+    align-items: center;
+  }
+
+  .fr-tag {
+    padding: 1.8rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .fr-tag span {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    border: 1px solid var(--red);
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    border-bottom: 2px solid var(--ink);
+  }
+  .pricing-header {
+    padding: 3.5rem 2.5rem 2.5rem;
+    border-bottom: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .pricing-label { font-family: var(--mono); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); }
+  .pricing-title { font-family: var(--mono); font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: 700; color: var(--ink); letter-spacing: -0.03em; }
+
+  .plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .plan {
+    padding: 3rem 2.5rem;
+    border-right: 2px solid var(--ink);
+    position: relative;
+    cursor: default;
+    transition: background 0.15s;
+  }
+  .plan:last-child { border-right: none; }
+  .plan.featured { background: var(--ink); color: var(--paper); }
+
+  .plan-tier {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .plan.featured .plan-tier { color: var(--red); }
+
+  .plan-price {
+    font-family: var(--mono);
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .plan.featured .plan-price { color: var(--paper); }
+  .plan-price span { font-size: 1.4rem; vertical-align: top; margin-top: 0.4rem; display: inline-block; }
+  .plan-price sub { font-size: 0.9rem; font-family: var(--grotesk); font-weight: 400; vertical-align: baseline; color: var(--muted); }
+
+  .plan-desc {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .plan-divider { height: 1px; background: rgba(15,14,12,0.15); margin-bottom: 1.5rem; }
+  .plan.featured .plan-divider { background: rgba(242,237,228,0.15); }
+
+  .plan-list { list-style: none; display: flex; flex-direction: column; gap: 0.55rem; margin-bottom: 2rem; }
+  .plan-list li {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    line-height: 1.4;
+  }
+  .plan.featured .plan-list li { color: rgba(242,237,228,0.6); }
+  .plan-list li::before {
+    content: '—';
+    color: var(--red);
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+
+  .plan-btn {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.8rem;
+    border: 2px solid rgba(15,14,12,0.2);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .plan-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .plan.featured .plan-btn {
+    background: var(--red);
+    border-color: var(--red);
+    color: var(--paper);
+  }
+  .plan.featured .plan-btn:hover { background: #E02020; border-color: #E02020; }
+
+  /* ── EARLY ACCESS ── */
+  .early { border-bottom: 2px solid var(--ink); }
+  .early-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .early-left {
+    padding: 5rem 3rem 5rem 2.5rem;
+    border-right: 2px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .early-label {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 2rem;
+  }
+  .early-title {
+    font-family: var(--mono);
+    font-size: clamp(2.5rem, 4vw, 4.5rem);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    line-height: 1.0;
+    margin-bottom: 2rem;
+  }
+  .early-title em { color: var(--red); font-style: normal; }
+  .early-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--muted);
+    max-width: 360px;
+    margin-bottom: 2rem;
+  }
+  .trust-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+  .trust-list li {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .trust-list li::before { content: '✓'; color: var(--red); font-weight: 700; }
+
+  .early-right {
+    padding: 5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .raw-form { display: flex; flex-direction: column; }
+  .form-line {
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+  }
+  .form-line label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    position: absolute;
+    top: 1.2rem;
+    left: 0;
+    pointer-events: none;
+    transition: color 0.15s;
+  }
+  .form-line:focus-within label { color: var(--red); }
+  .form-line input {
+    width: 100%;
+    padding: 2.5rem 0 1rem;
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    outline: none;
+  }
+  .form-line input::placeholder { color: rgba(122,113,104,0.4); }
+  .form-submit {
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    padding: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .form-submit:hover { background: var(--red); border-color: var(--red); }
+  .form-submit:active { transform: scale(0.98); }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid var(--ink);
+  }
+  .footer-logo {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+  }
+  .footer-logo em { color: var(--red); font-style: normal; }
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 1.2rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .hero-left { padding: 3rem 1.5rem; border-right: none; border-bottom: 2px solid var(--ink); }
+    .hero-right { border-bottom: 2px solid var(--ink); }
+    .data-table { grid-template-columns: 1fr 1fr; }
+    .how-header, .features-header, .pricing-header { flex-direction: column; gap: 0.5rem; }
+    .steps-row { grid-template-columns: 1fr; }
+    .step { border-right: none; border-bottom: 2px solid var(--ink); }
+    .step:last-child { border-bottom: none; }
+    .feature-row { grid-template-columns: 1fr; }
+    .fr-name { border-right: none; border-bottom: 1px solid rgba(15,14,12,0.12); padding: 1rem 1.5rem; }
+    .fr-desc { border-right: none; padding: 1rem 1.5rem; }
+    .fr-tag { padding: 1rem 1.5rem; justify-content: flex-start; }
+    .plans { grid-template-columns: 1fr; }
+    .plan { border-right: none; border-bottom: 2px solid var(--ink); }
+    .plan:last-child { border-bottom: none; }
+    .early-inner { grid-template-columns: 1fr; }
+    .early-left { padding: 3rem 1.5rem; border-right: none; border-bottom: 2px solid var(--ink); }
+    .early-right { padding: 3rem 1.5rem; }
+    footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">PITCHSCOUT — <em>AI</em></a>
+  <ul class="nav-links">
+    <li><a href="#how">PROCESS</a></li>
+    <li><a href="#features">FEATURES</a></li>
+    <li><a href="#pricing">PRICING</a></li>
+  </ul>
+  <button class="nav-cta">REQUEST ACCESS</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <div class="hero-index"><span>YOUTH SOCCER · AI ANALYSIS</span></div>
+    <h1 class="hero-title">
+      SEE<br>
+      EVERY<br>
+      <span class="red">PLAYER</span><br>
+      <span class="outline">CLEARLY.</span>
+    </h1>
+    <div class="hero-desc-block">
+      <p class="hero-desc">Upload any match footage, enter a jersey number, and receive a deep AI-generated performance report in minutes. Built for youth soccer coaches who take development seriously.</p>
+      <div class="hero-cta-row">
+        <button class="btn-ink">Start Free Analysis</button>
+        <button class="btn-bare">View Sample Report</button>
+      </div>
+    </div>
+    <div class="hero-footnote">
+      <div class="hero-fn-item"><strong>2 min</strong>Avg. report time</div>
+      <div class="hero-fn-item"><strong>38+</strong>Data points</div>
+      <div class="hero-fn-item"><strong>94%</strong>Detection accuracy</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="report-header-raw">
+      <div class="rhr-left">
+        <div class="rhr-label">// PLAYER REPORT — 04.12.25</div>
+        <div class="rhr-player">Yusuf Atta-Mensah</div>
+        <div class="rhr-info">Central Midfielder · #8 · U15 · 82min played</div>
+      </div>
+      <div class="rhr-grade">B+</div>
+    </div>
+
+    <div class="data-table">
+      <div class="dt-cell">
+        <div class="dt-val pos">87%</div>
+        <div class="dt-key">Pass Acc.</div>
+      </div>
+      <div class="dt-cell">
+        <div class="dt-val">49</div>
+        <div class="dt-key">Touches</div>
+      </div>
+      <div class="dt-cell">
+        <div class="dt-val pos">+14</div>
+        <div class="dt-key">Pressures</div>
+      </div>
+      <div class="dt-cell">
+        <div class="dt-val neg">−3</div>
+        <div class="dt-key">Turnovers</div>
+      </div>
+    </div>
+
+    <div class="obs-list">
+      <div class="obs-entry">
+        <span class="obs-type-tag pos">STRENGTH</span>
+        <p class="obs-text">Exceptional line-breaking passes — 87% accuracy with 6 successful switches of play. Created clear chances from deep on 4 separate occasions in the second half.</p>
+      </div>
+      <div class="obs-entry">
+        <span class="obs-type-tag pos">STRENGTH</span>
+        <p class="obs-text">Relentless pressing in the opponent's half. 14 pressures tracked, 11 won — a top-5% output for this age group and position combination.</p>
+      </div>
+      <div class="obs-entry">
+        <span class="obs-type-tag neg">DEVELOP</span>
+        <p class="obs-text">3 turnovers in transition tied to decision delay (avg. +0.9s over cohort benchmark). Holding the ball in high-pressure zones is the primary development lever.</p>
+      </div>
+      <div class="obs-entry">
+        <span class="obs-type-tag info">TACTICAL</span>
+        <p class="obs-text">Consistent drift toward the right half-space when in possession. A structured pattern around this preference could be an attacking asset if deliberately coached.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-header">
+    <div class="how-label">// PROCESS</div>
+    <h2 class="how-title">HOW IT<br>WORKS</h2>
+    <span class="how-count">003 STEPS</span>
+  </div>
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-n">// STEP 001</div>
+      <h3 class="step-title">UPLOAD YOUR FOOTAGE</h3>
+      <p class="step-desc">Drop any game or practice video. MP4, MOV, most formats. Phone footage from the sideline is enough — no professional equipment required.</p>
+      <p class="step-aside">Any camera. Any angle. Full match or short clip.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">// STEP 002</div>
+      <h3 class="step-title">ENTER A JERSEY NUMBER</h3>
+      <p class="step-desc">Just a number. Our computer vision model identifies and tracks that player automatically throughout the entire video — no annotation needed from you.</p>
+      <p class="step-aside">AI detection trained on real youth soccer footage.</p>
+    </div>
+    <div class="step">
+      <div class="step-n">// STEP 003</div>
+      <h3 class="step-title">READ THE REPORT</h3>
+      <p class="step-desc">Receive a graded, timestamped performance report — pass accuracy, pressing, decision speed, positional patterns, development notes. Share with one link.</p>
+      <p class="step-aside">Average delivery time: under 2 minutes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header">
+    <div class="features-label">// FEATURES</div>
+    <h2 class="features-title">WHAT<br>YOU GET</h2>
+  </div>
+  <div class="feature-table">
+    <div class="feature-row">
+      <div class="fr-name">Jersey Detection</div>
+      <div class="fr-desc">Identifies and tracks a player by number alone using computer vision. No wearables, no markers, no special setup needed. Works in crowded scenes.</div>
+      <div class="fr-tag"><span>CV MODEL</span></div>
+    </div>
+    <div class="feature-row">
+      <div class="fr-name">38+ Data Points</div>
+      <div class="fr-desc">Pass accuracy, pressing intensity, decision speed, off-ball movement, positional discipline — every metric a youth coach needs to develop players with intention.</div>
+      <div class="fr-tag"><span>AI ENGINE</span></div>
+    </div>
+    <div class="feature-row">
+      <div class="fr-name">Progress Tracking</div>
+      <div class="fr-desc">Upload multiple matches across a season and track how each player develops over time. Trend data, not just snapshots.</div>
+      <div class="fr-tag"><span>LONG VIEW</span></div>
+    </div>
+    <div class="feature-row">
+      <div class="fr-name">Shareable Reports</div>
+      <div class="fr-desc">Every report gets a link. Send to players, parents, technical directors. No account or login required to read the report.</div>
+      <div class="fr-tag"><span>SHARING</span></div>
+    </div>
+    <div class="feature-row">
+      <div class="fr-name">Any Footage</div>
+      <div class="fr-desc">Phone recording from the sideline, tripod, coach cam, stadium feed — if the player appears on screen we can analyze them. No minimum production quality.</div>
+      <div class="fr-tag"><span>FLEXIBLE</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="pricing-header">
+    <div class="pricing-label">// PRICING</div>
+    <h2 class="pricing-title">PLANS</h2>
+  </div>
+  <div class="plans">
+    <div class="plan">
+      <div class="plan-tier">// FREE</div>
+      <div class="plan-price"><span>$</span>0<sub>/mo</sub></div>
+      <p class="plan-desc">Try PitchScout. 3 full analyses per month, no credit card.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-list">
+        <li>3 player analyses/month</li>
+        <li>Basic performance report</li>
+        <li>7-day data retention</li>
+        <li>Email delivery</li>
+      </ul>
+      <button class="plan-btn">GET STARTED FREE</button>
+    </div>
+    <div class="plan featured">
+      <div class="plan-tier">// PRO — MOST POPULAR</div>
+      <div class="plan-price"><span>$</span>29<sub>/mo</sub></div>
+      <p class="plan-desc">Unlimited analyses for the dedicated coach. Full feature access.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-list">
+        <li>Unlimited analyses</li>
+        <li>Full tactical report</li>
+        <li>Progress tracking</li>
+        <li>Shareable report links</li>
+        <li>Video timestamps</li>
+        <li>Priority processing</li>
+      </ul>
+      <button class="plan-btn">START 14-DAY TRIAL</button>
+    </div>
+    <div class="plan">
+      <div class="plan-tier">// CLUB</div>
+      <div class="plan-price"><span>$</span>99<sub>/mo</sub></div>
+      <p class="plan-desc">Multi-coach access for academies and development clubs.</p>
+      <div class="plan-divider"></div>
+      <ul class="plan-list">
+        <li>Everything in Pro</li>
+        <li>Up to 10 coach accounts</li>
+        <li>Club analytics dashboard</li>
+        <li>API access</li>
+        <li>Dedicated support</li>
+      </ul>
+      <button class="plan-btn">CONTACT SALES</button>
+    </div>
+  </div>
+</section>
+
+<!-- EARLY ACCESS -->
+<section class="early" id="early">
+  <div class="early-inner">
+    <div class="early-left">
+      <div class="early-label">// BETA PROGRAMME</div>
+      <h2 class="early-title">
+        JOIN<br>
+        <em>EARLY.</em><br>
+        BUILD<br>
+        WITH US.
+      </h2>
+      <p class="early-desc">We're onboarding coaches now. Get free Pro access for 3 months in exchange for your real feedback as we build.</p>
+      <ul class="trust-list">
+        <li>No credit card required to start</li>
+        <li>Footage never shared beyond analysis</li>
+        <li>Cancel any time, no contracts</li>
+      </ul>
+    </div>
+    <div class="early-right">
+      <form onsubmit="return false;">
+        <div class="raw-form">
+          <div class="form-line">
+            <label for="w-name">Full Name</label>
+            <input type="text" id="w-name" placeholder="Firstname Lastname" />
+          </div>
+          <div class="form-line">
+            <label for="w-email">Email Address</label>
+            <input type="email" id="w-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-line">
+            <label for="w-club">Club or Team</label>
+            <input type="text" id="w-club" placeholder="Optional" />
+          </div>
+          <button type="submit" class="form-submit">REQUEST EARLY ACCESS →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PITCHSCOUT — <em>AI</em></div>
+  <div class="footer-copy">© 2025 PITCHSCOUT AI. ALL RIGHTS RESERVED.</div>
+</footer>
+
+<script>
+  const items = document.querySelectorAll('.step, .feature-row, .plan, .obs-entry');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.06 });
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    items.forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(10px)';
+      el.style.transition = `opacity 0.45s ${(i % 4) * 0.05}s cubic-bezier(0.16,1,0.3,1), transform 0.45s ${(i % 4) * 0.05}s cubic-bezier(0.16,1,0.3,1)`;
+      obs.observe(el);
+    });
+  }
+</script>
+</body>
+</html>
