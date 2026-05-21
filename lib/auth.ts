@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
-export const ALLOWED_EMAILS = [
+const ALLOWED_EMAILS = [
   'dpalmer.it@gmail.com',
   'scout.logi@gmail.com',
   'lizzyp24@gmail.com',

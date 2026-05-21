@@ -25,8 +25,9 @@ export async function getJob(jobId: string): Promise<Job | null> {
     }))
     const body = await res.Body!.transformToString()
     return JSON.parse(body) as Job
-  } catch {
-    return null
+  } catch (err: unknown) {
+    if ((err as { name?: string }).name === 'NoSuchKey') return null
+    throw err
   }
 }
 
@@ -40,27 +41,39 @@ export async function putJob(job: Job): Promise<void> {
 }
 
 export async function listJobsForUser(userId: string): Promise<Job[]> {
-  const res = await s3.send(new ListObjectsV2Command({
-    Bucket: BUCKET,
-    Prefix: 'jobs/',
-  }))
-  const metaKeys = (res.Contents ?? [])
-    .map(o => o.Key!)
-    .filter(k => k.endsWith('/meta.json'))
+  try {
+    const metaKeys: string[] = []
+    let continuationToken: string | undefined
 
-  const jobs = await Promise.all(
-    metaKeys.map(async key => {
-      const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
-      const body = await obj.Body!.transformToString()
-      return JSON.parse(body) as Job
-    })
-  )
-  return jobs
-    .filter(j => j.userId === userId)
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    do {
+      const res = await s3.send(new ListObjectsV2Command({
+        Bucket: BUCKET,
+        Prefix: 'jobs/',
+        ContinuationToken: continuationToken,
+      }))
+      for (const obj of res.Contents ?? []) {
+        if (obj.Key?.endsWith('/meta.json')) metaKeys.push(obj.Key)
+      }
+      continuationToken = res.IsTruncated ? res.NextContinuationToken : undefined
+    } while (continuationToken)
+
+    const jobs = await Promise.all(
+      metaKeys.map(async key => {
+        const obj = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }))
+        const body = await obj.Body!.transformToString()
+        return JSON.parse(body) as Job
+      })
+    )
+    return jobs
+      .filter(j => j.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  } catch (err: unknown) {
+    throw new Error(`Failed to list jobs for user ${userId}: ${(err as Error).message ?? err}`)
+  }
 }
 
 export async function presignedPutUrl(key: string, contentType: string): Promise<string> {
+  if (!key.startsWith('jobs/')) throw new Error(`Invalid key prefix: ${key}`)
   return getSignedUrl(
     s3,
     new PutObjectCommand({ Bucket: BUCKET, Key: key, ContentType: contentType }),

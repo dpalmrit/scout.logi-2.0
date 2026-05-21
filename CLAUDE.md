@@ -63,6 +63,24 @@ app/
 
 ---
 
+## PitchScout Lab — Required Vercel Environment Variables
+
+These must be set in the Vercel project dashboard (Settings > Environment Variables) for the Lab feature to function:
+
+| Variable | Purpose |
+|----------|---------|
+| `GOOGLE_CLIENT_ID` | OAuth client ID from Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | OAuth client secret from Google Cloud Console |
+| `NEXTAUTH_SECRET` | Random secret for NextAuth JWT signing (generate with `openssl rand -base64 32`) |
+| `NEXTAUTH_URL` | Full canonical URL of the deployment (e.g. `https://pitchscout.ai`) |
+| `AWS_REGION` | AWS region for the S3 bucket (e.g. `us-east-1`) |
+| `AWS_ACCESS_KEY_ID` | IAM key with `s3:GetObject`, `s3:PutObject`, `s3:ListBucket` on the lab bucket |
+| `AWS_SECRET_ACCESS_KEY` | Corresponding IAM secret |
+| `PITCHSCOUT_LAB_BUCKET` | S3 bucket name for Lab job storage |
+| `MODAL_TRIGGER_URL` | HTTP endpoint that triggers the Modal analysis pipeline |
+
+---
+
 ## Session History
 
 - **2026-05-20** — Initial build and deployment
