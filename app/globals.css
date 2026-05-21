@@ -38,3 +38,23 @@ body::before {
   opacity: 1;
   transform: translateY(0);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .float-card {
+    animation: none;
+    transform: rotate(1.5deg);
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping {
+    animation: none;
+  }
+}
