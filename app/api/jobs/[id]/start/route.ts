@@ -30,9 +30,12 @@ export async function POST(
 
   try {
     await triggerPipeline(job.id, job.videoKey, process.env.PITCHSCOUT_LAB_BUCKET!)
-  } catch {
-    // Revert status on pipeline trigger failure
-    await putJob({ ...job, status: 'queued' })
+  } catch (triggerErr) {
+    try {
+      await putJob({ ...job, status: 'queued' })
+    } catch (revertErr) {
+      console.error('CRITICAL: failed to revert job status after trigger failure', job.id, revertErr)
+    }
     return NextResponse.json({ error: 'Pipeline trigger failed' }, { status: 502 })
   }
 

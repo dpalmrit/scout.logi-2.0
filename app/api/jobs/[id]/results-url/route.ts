@@ -26,6 +26,11 @@ export async function GET(
   }
 
   const resultsKey = job.resultsKey ?? `jobs/${job.id}/results.json`
+
+  if (!resultsKey.startsWith('jobs/')) {
+    return NextResponse.json({ error: 'Invalid results key' }, { status: 500 })
+  }
+
   const url = await presignedGetUrl(resultsKey)
 
   return NextResponse.json({ url })

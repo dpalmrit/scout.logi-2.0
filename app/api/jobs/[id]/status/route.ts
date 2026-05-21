@@ -21,9 +21,8 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  return NextResponse.json({
-    status: job.status,
-    progress: job.progress,
-    error: job.error,
-  })
+  return NextResponse.json(
+    { status: job.status, progress: job.progress, error: job.error },
+    { headers: { 'Cache-Control': 'no-store' } }
+  )
 }

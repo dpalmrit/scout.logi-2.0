@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { putJob, presignedPutUrl } from '@/lib/s3'
 import type { Job } from '@/lib/types'
 import { nanoid } from 'nanoid'
+import path from 'path'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -24,12 +25,14 @@ export async function POST(request: Request) {
   }
 
   const jobId = nanoid()
-  const videoKey = `jobs/${jobId}/video/${filename}`
+  const safeFilename = path.basename(filename)
+  const videoKey = `jobs/${jobId}/video/${safeFilename}`
 
   let uploadUrl: string
   try {
     uploadUrl = await presignedPutUrl(videoKey, contentType ?? 'application/octet-stream')
   } catch (err) {
+    console.error('Failed to create upload URL', err)
     return NextResponse.json({ error: 'Failed to generate upload URL' }, { status: 500 })
   }
 
