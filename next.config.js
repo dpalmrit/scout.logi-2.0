@@ -2,7 +2,7 @@
 const nextConfig = {
   output: 'export',
   trailingSlash: false,
-  basePath: '/scout.logi-2.0',
-  assetPrefix: '/scout.logi-2.0',
+  basePath: '/pitchscout-landing-v1',
+  assetPrefix: '/pitchscout-landing-v1',
 }
 module.exports = nextConfig
