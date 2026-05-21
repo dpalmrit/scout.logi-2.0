@@ -1,8 +1,3 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'export',
-  trailingSlash: false,
-  basePath: '/scout.logi-2.0',
-  assetPrefix: '/scout.logi-2.0',
-}
+const nextConfig = {}
 module.exports = nextConfig
