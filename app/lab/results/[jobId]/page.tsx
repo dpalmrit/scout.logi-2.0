@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, CircleNotch } from '@phosphor-icons/react'
 import type { Results } from '@/lib/types'
+import RadarCanvas from '@/app/components/lab/RadarCanvas'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -173,7 +174,7 @@ export default function ResultsPage({
     }
     switch (activeTab) {
       case 'radar':
-        return <RadarStub {...vizProps} />
+        return <RadarCanvas {...vizProps} />
       case 'voronoi':
         return <VoronoiStub {...vizProps} />
       case 'trajectory':
