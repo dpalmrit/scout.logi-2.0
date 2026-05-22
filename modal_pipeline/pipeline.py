@@ -64,9 +64,9 @@ image = (
 
 STRIDE = 5  # Process every 5th frame
 
-# Roboflow Universe public model URLs
-PLAYER_MODEL_URL = "https://universe.roboflow.com/roboflow-jvuqo/football-players-detection-3zvbc/model/12"
-KEYPOINT_MODEL_URL = "https://universe.roboflow.com/roboflow-jvuqo/football-field-detection-f07vi/model/14"
+# Roboflow API model references (workspace/project/version)
+PLAYER_MODEL_RF = ("roboflow-jvuqo", "football-players-detection-3zvbc", "12")
+KEYPOINT_MODEL_RF = ("roboflow-jvuqo", "football-field-detection-f07vi", "14")
 
 SIGLIP_MODEL_ID = "google/siglip-base-patch16-224"
 
@@ -317,8 +317,27 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         # ==================================================================
         # Phase 1: Load models
         # ==================================================================
-        player_model = YOLO(PLAYER_MODEL_URL)
-        keypoint_model = YOLO(KEYPOINT_MODEL_URL)
+        import requests as _req
+        def _download_rf_model(workspace, project, version, dest):
+            api_key = os.environ["ROBOFLOW_API_KEY"]
+            meta = _req.get(
+                f"https://api.roboflow.com/{workspace}/{project}/{version}/yolov8pytorch",
+                params={"api_key": api_key},
+                timeout=30,
+            ).json()
+            link = meta["model"]["link"]
+            r = _req.get(link, stream=True, timeout=120)
+            r.raise_for_status()
+            with open(dest, "wb") as f:
+                for chunk in r.iter_content(65536):
+                    f.write(chunk)
+
+        player_weights = "/tmp/player_model.pt"
+        keypoint_weights = "/tmp/keypoint_model.pt"
+        _download_rf_model(*PLAYER_MODEL_RF, player_weights)
+        _download_rf_model(*KEYPOINT_MODEL_RF, keypoint_weights)
+        player_model = YOLO(player_weights)
+        keypoint_model = YOLO(keypoint_weights)
         update_meta("processing", 5)
 
         # ==================================================================
