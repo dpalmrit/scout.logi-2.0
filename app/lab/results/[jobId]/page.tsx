@@ -7,6 +7,7 @@ import type { Results } from '@/lib/types'
 import RadarCanvas from '@/app/components/lab/RadarCanvas'
 import VoronoiView from '@/app/components/lab/VoronoiView'
 import TrajectoryView from '@/app/components/lab/TrajectoryView'
+import StatsPanel from '@/app/components/lab/StatsPanel'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -182,7 +183,7 @@ export default function ResultsPage({
       case 'trajectory':
         return <TrajectoryView {...vizProps} />
       case 'stats':
-        return <StatsStub {...vizProps} />
+        return <StatsPanel {...vizProps} />
     }
   }
 
