@@ -1,3 +1,5 @@
+# For local dev/IDE tooling only.
+# The Modal image is built from the pip_install() call in pipeline.py, not this file.
 ultralytics>=8.3
 supervision>=0.25
 boto3>=1.34

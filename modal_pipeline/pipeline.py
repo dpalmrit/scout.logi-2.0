@@ -258,19 +258,6 @@ def _compute_homography(src_pts, dst_pts_m):
     return H
 
 
-def _apply_homography(H, x_img: float, y_img: float):
-    """Project image point through homography H → pitch coordinates (metres)."""
-    import numpy as np
-
-    pt = np.array([[[x_img, y_img]]], dtype=np.float32)
-    out = cv2.perspectiveTransform(pt, H)
-    px, py = float(out[0][0][0]), float(out[0][0][1])
-    # Clamp to pitch bounds
-    px = max(0.0, min(PITCH_WIDTH_M, px))
-    py = max(0.0, min(PITCH_HEIGHT_M, py))
-    return px, py
-
-
 # ---------------------------------------------------------------------------
 # Main pipeline function
 # ---------------------------------------------------------------------------
@@ -303,7 +290,14 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
 
-    update_meta = _make_update_meta(s3, job_id, results_bucket, base_meta)
+    current_progress = 0
+
+    _update_meta_inner = _make_update_meta(s3, job_id, results_bucket, base_meta)
+
+    def update_meta(status, progress, error=None, results_key=None):
+        nonlocal current_progress
+        current_progress = progress
+        _update_meta_inner(status, progress, error=error, results_key=results_key)
 
     video_path = None
 
@@ -316,6 +310,7 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
             video_path = f.name
 
+        # Video and results share the same bucket (PITCHSCOUT_LAB_BUCKET on the Vercel side)
         s3.download_file(results_bucket, video_s3_key, video_path)
         update_meta("processing", 2)
 
@@ -620,7 +615,7 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         update_meta("done", 100, results_key=results_key)
 
     except Exception as exc:
-        update_meta("error", 0, error=str(exc))
+        update_meta("error", current_progress, error=str(exc))
         raise
 
     finally:
