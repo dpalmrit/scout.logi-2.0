@@ -530,6 +530,18 @@ def run_pipeline_chunk(
 
 
 # ---------------------------------------------------------------------------
+# Helper: clean up chunk files from S3
+# ---------------------------------------------------------------------------
+
+def _cleanup_chunks(s3_client, bucket: str, keys: list):
+    for key in keys:
+        try:
+            s3_client.delete_object(Bucket=bucket, Key=key)
+        except Exception:
+            pass
+
+
+# ---------------------------------------------------------------------------
 # Orchestrator: split → parallel chunks → merge → write results
 # ---------------------------------------------------------------------------
 
@@ -616,8 +628,8 @@ def orchestrate(job_id: str, video_s3_key: str, results_bucket: str):
         # ── Check for cancellation before spinning up GPU containers ──────
         try:
             obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
-            current = json.loads(obj["Body"].read())
-            if current.get("status") == "cancelled":
+            if json.loads(obj["Body"].read()).get("status") == "cancelled":
+                _cleanup_chunks(s3, results_bucket, chunk_s3_keys)
                 return
         except Exception:
             pass
@@ -632,8 +644,8 @@ def orchestrate(job_id: str, video_s3_key: str, results_bucket: str):
         # ── Check for cancellation before writing results ──────────────────
         try:
             obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
-            current = json.loads(obj["Body"].read())
-            if current.get("status") == "cancelled":
+            if json.loads(obj["Body"].read()).get("status") == "cancelled":
+                _cleanup_chunks(s3, results_bucket, chunk_s3_keys)
                 return
         except Exception:
             pass
@@ -653,12 +665,7 @@ def orchestrate(job_id: str, video_s3_key: str, results_bucket: str):
             ContentEncoding="gzip",
         )
 
-        # Clean up chunk files
-        for key in chunk_s3_keys:
-            try:
-                s3.delete_object(Bucket=results_bucket, Key=key)
-            except Exception:
-                pass
+        _cleanup_chunks(s3, results_bucket, chunk_s3_keys)
 
         update_meta("done", 100, results_key=results_key)
 
