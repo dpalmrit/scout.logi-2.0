@@ -43,7 +43,6 @@ image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("libgl1", "libglib2.0-0")
     .pip_install(
-        "ultralytics>=8.3",
         "supervision>=0.25",
         "boto3>=1.34",
         "torch",
@@ -55,6 +54,7 @@ image = (
         "numpy>=1.26",
         "Pillow>=10.0",
         "fastapi[standard]>=0.100",
+        "inference[yolov8]>=0.9.30",
     )
 )
 
@@ -64,9 +64,9 @@ image = (
 
 STRIDE = 5  # Process every 5th frame
 
-# Roboflow API model references (workspace/project/version)
-PLAYER_MODEL_RF = ("roboflow-jvuqo", "football-players-detection-3zvbc", "12")
-KEYPOINT_MODEL_RF = ("roboflow-jvuqo", "football-field-detection-f07vi", "14")
+# Roboflow model IDs for the inference SDK (workspace/project/version format)
+PLAYER_MODEL_ID = "football-players-detection-3zvbc/12"
+KEYPOINT_MODEL_ID = "football-field-detection-f07vi/14"
 
 SIGLIP_MODEL_ID = "google/siglip-base-patch16-224"
 
@@ -273,7 +273,7 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
     import cv2
     import numpy as np
     import supervision as sv
-    from ultralytics import YOLO
+    from inference import get_model as _get_rf_model
     import torch
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -317,27 +317,9 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         # ==================================================================
         # Phase 1: Load models
         # ==================================================================
-        import requests as _req
-        def _download_rf_model(workspace, project, version, dest):
-            api_key = os.environ["ROBOFLOW_API_KEY"]
-            meta = _req.get(
-                f"https://api.roboflow.com/{workspace}/{project}/{version}/yolov8pytorch",
-                params={"api_key": api_key},
-                timeout=30,
-            ).json()
-            link = meta["model"]["link"]
-            r = _req.get(link, stream=True, timeout=120)
-            r.raise_for_status()
-            with open(dest, "wb") as f:
-                for chunk in r.iter_content(65536):
-                    f.write(chunk)
-
-        player_weights = "/tmp/player_model.pt"
-        keypoint_weights = "/tmp/keypoint_model.pt"
-        _download_rf_model(*PLAYER_MODEL_RF, player_weights)
-        _download_rf_model(*KEYPOINT_MODEL_RF, keypoint_weights)
-        player_model = YOLO(player_weights)
-        keypoint_model = YOLO(keypoint_weights)
+        _rf_key = os.environ["ROBOFLOW_API_KEY"]
+        player_model = _get_rf_model(PLAYER_MODEL_ID, api_key=_rf_key)
+        keypoint_model = _get_rf_model(KEYPOINT_MODEL_ID, api_key=_rf_key)
         update_meta("processing", 5)
 
         # ==================================================================
@@ -364,8 +346,8 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
                 continue
 
             # Player / ball detection
-            results = player_model(frame, imgsz=1280, verbose=False)[0]
-            detections = sv.Detections.from_ultralytics(results)
+            results = player_model.infer(frame, confidence=0.4, iou_threshold=0.5)[0]
+            detections = sv.Detections.from_inference(results)
             detections = tracker.update_with_detections(detections)
 
             # Extract ball position (take highest-confidence detection)
@@ -451,21 +433,24 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
             if kp_frame_num % (STRIDE * KP_STRIDE) != 0:
                 continue
 
-            kp_results = keypoint_model(frame, imgsz=1280, verbose=False)[0]
-            if kp_results.keypoints is None or len(kp_results.keypoints) == 0:
+            kp_results = keypoint_model.infer(frame)[0]
+            if not getattr(kp_results, "predictions", None):
                 continue
 
-            # Use the detection with most confident keypoints
-            best_kps = kp_results.keypoints.xy[0].cpu().numpy()  # (32, 2) or fewer
-            kp_conf = kp_results.keypoints.conf[0].cpu().numpy() if kp_results.keypoints.conf is not None else np.ones(len(best_kps))
+            # Use the detection with the most keypoints
+            best_pred = max(kp_results.predictions, key=lambda p: len(getattr(p, "keypoints", [])))
+            raw_kps = getattr(best_pred, "keypoints", [])
+            if not raw_kps:
+                continue
 
             conf_thresh = 0.5
             src_pts = []
             dst_pts_m = []
-            for idx, ((px, py), conf) in enumerate(zip(best_kps, kp_conf)):
-                if conf >= conf_thresh and idx < len(PITCH_KEYPOINTS_M):
-                    if px > 0 and py > 0:
-                        src_pts.append((float(px), float(py)))
+            for idx, kp in enumerate(raw_kps):
+                kpx, kpy, kp_c = float(kp.x), float(kp.y), float(kp.confidence)
+                if kp_c >= conf_thresh and idx < len(PITCH_KEYPOINTS_M):
+                    if kpx > 0 and kpy > 0:
+                        src_pts.append((kpx, kpy))
                         dst_pts_m.append(PITCH_KEYPOINTS_M[idx])
 
             H = _compute_homography(src_pts, dst_pts_m)
