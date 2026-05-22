@@ -82,14 +82,16 @@ export default function VoronoiView({ results, frameIdx }: VizProps) {
     idx: number
   }
 
-  const points: PointEntry[] = players.map((p, i) => ({
-    x: p.pitch_x * 10,
-    y: p.pitch_y * 10,
-    team: p.team,
-    role: p.role,
-    id: p.id,
-    idx: i,
-  }))
+  const points: PointEntry[] = players
+    .filter((p) => p.pitch_x != null && p.pitch_y != null)
+    .map((p, i) => ({
+      x: p.pitch_x! * 10,
+      y: p.pitch_y! * 10,
+      team: p.team,
+      role: p.role,
+      id: p.id,
+      idx: i,
+    }))
 
   let cellPaths: Array<{ d: string; team: 0 | 1 }> = []
 
@@ -172,6 +174,7 @@ export default function VoronoiView({ results, frameIdx }: VizProps) {
 
         {/* Player dots */}
         {allPlayers.map((player) => {
+          if (player.pitch_x == null || player.pitch_y == null) return null
           const cx = player.pitch_x * 10
           const cy = player.pitch_y * 10
           const isRef = player.role === 'referee'

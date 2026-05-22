@@ -96,6 +96,7 @@ export default function RadarCanvas({ results, frameIdx, onFrameChange }: VizPro
 
     // Draw players
     for (const player of frame.players) {
+      if (player.pitch_x == null || player.pitch_y == null) continue
       const cx = player.pitch_x * 10
       const cy = player.pitch_y * 10
 

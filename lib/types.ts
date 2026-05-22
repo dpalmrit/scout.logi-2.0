@@ -17,8 +17,8 @@ export interface ResultsFrame {
     id: number
     team: 0 | 1
     role: 'player' | 'goalkeeper' | 'referee'
-    pitch_x: number
-    pitch_y: number
+    pitch_x: number | null
+    pitch_y: number | null
   }>
   ball: { pitch_x: number; pitch_y: number } | null
 }
