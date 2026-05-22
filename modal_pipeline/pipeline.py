@@ -46,7 +46,6 @@ image = (
         "ultralytics>=8.3",
         "supervision>=0.25",
         "boto3>=1.34",
-        "requests>=2.31",
         "torch",
         "torchvision",
         "transformers>=4.40",
@@ -65,9 +64,16 @@ image = (
 
 STRIDE = 5  # Process every 5th frame
 
-# Roboflow model references (workspace, project, version)
-PLAYER_MODEL_RF = ("roboflow-jvuqo", "football-players-detection-3zvbc", 12)
-KEYPOINT_MODEL_RF = ("roboflow-jvuqo", "football-field-detection-f07vi", 14)
+# Model sources
+# Using standard ultralytics COCO model for player/ball detection (no auth needed).
+# Fine-tuned Roboflow football models can replace these once model weight download
+# is unblocked (Roboflow API currently returns dataset ZIPs, not .pt weights).
+PLAYER_MODEL_SRC = "yolov8x.pt"   # person=0, sports ball=32 in COCO
+KEYPOINT_MODEL_SRC = None          # pitch keypoint detection — disabled for now
+
+# COCO class IDs used for detection remapping
+COCO_PERSON = 0
+COCO_BALL = 32
 
 SIGLIP_MODEL_ID = "google/siglip-base-patch16-224"
 
@@ -315,48 +321,12 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         update_meta("processing", 2)
 
         # ==================================================================
-        # Phase 1: Load models (download trained weights from Roboflow API)
+        # Phase 1: Load models
         # ==================================================================
-        import requests as _req
         from ultralytics import YOLO as _YOLO
 
-        _rf_key = os.environ["ROBOFLOW_API_KEY"]
-
-        def _download_rf_weights(workspace, project, version, dest_path):
-            """Download trained YOLOv8 .pt weights from Roboflow."""
-            for fmt in ("yolov8pytorch", "yolov8"):
-                resp = _req.get(
-                    f"https://api.roboflow.com/{workspace}/{project}/{version}/{fmt}",
-                    params={"api_key": _rf_key},
-                    timeout=30,
-                ).json()
-                print(f"Roboflow API [{fmt}] keys: {list(resp.keys())}")
-
-                # response may nest link under 'model', 'export', or at root
-                link = (
-                    (resp.get("model") or {}).get("link")
-                    or (resp.get("export") or {}).get("link")
-                    or resp.get("link")
-                )
-                if not link:
-                    print(f"  → no link for format {fmt}, trying next")
-                    continue
-
-                r = _req.get(link, stream=True, timeout=300)
-                r.raise_for_status()
-                with open(dest_path, "wb") as f:
-                    for chunk in r.iter_content(65536):
-                        f.write(chunk)
-                print(f"  → downloaded {dest_path} ({os.path.getsize(dest_path)} bytes)")
-                return
-
-            raise ValueError(f"Could not obtain model weights for {workspace}/{project}/{version}. Last response: {resp}")
-
-        _download_rf_weights(*PLAYER_MODEL_RF, "/tmp/player_model.pt")
-        _download_rf_weights(*KEYPOINT_MODEL_RF, "/tmp/keypoint_model.pt")
-
-        player_model = _YOLO("/tmp/player_model.pt")
-        keypoint_model = _YOLO("/tmp/keypoint_model.pt")
+        # yolov8x.pt downloads from ultralytics CDN automatically
+        player_model = _YOLO(PLAYER_MODEL_SRC)
         update_meta("processing", 5)
 
         # ==================================================================
@@ -385,6 +355,20 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
             # Player / ball detection
             results = player_model(frame, imgsz=1280, verbose=False)[0]
             detections = sv.Detections.from_ultralytics(results)
+
+            # Remap COCO class IDs → pipeline class IDs
+            # COCO: person=0, sports ball=32 → CLASS_PLAYER=0, CLASS_BALL=2
+            if detections.class_id is not None:
+                remapped = np.where(
+                    detections.class_id == COCO_BALL,
+                    CLASS_BALL,
+                    np.where(detections.class_id == COCO_PERSON, CLASS_PLAYER, -1),
+                )
+                keep = remapped >= 0
+                detections = detections[keep]
+                if detections.class_id is not None:
+                    detections.class_id = remapped[keep]
+
             detections = tracker.update_with_detections(detections)
 
             # Extract ball position (take highest-confidence detection)
@@ -451,63 +435,14 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         update_meta("processing", 60)
 
         # ==================================================================
-        # Phase 3: Keypoint detection + homography (second pass, sampled)
+        # Phase 3: Keypoint detection + homography
+        # Pitch keypoint model not yet available — homography disabled.
+        # All pitch_x/pitch_y values will be None; stats still work.
         # ==================================================================
-        # We keep a rolling "best" homography updated whenever we get ≥4 keypoints
-        H_current = None
-        homographies = {}  # frame_num → H matrix (numpy)
-
-        # Sample 1 in every 25 sampled frames for keypoint detection (to save time)
-        KP_STRIDE = 25
-        cap2 = cv2.VideoCapture(video_path)
-        kp_frame_num = 0
-
-        while True:
-            ret, frame = cap2.read()
-            if not ret:
-                break
-            kp_frame_num += 1
-            if kp_frame_num % (STRIDE * KP_STRIDE) != 0:
-                continue
-
-            kp_results = keypoint_model(frame, imgsz=1280, verbose=False)[0]
-            if kp_results.keypoints is None or len(kp_results.keypoints) == 0:
-                continue
-
-            # Use the detection with most confident keypoints
-            best_kps = kp_results.keypoints.xy[0].cpu().numpy()  # (32, 2) or fewer
-            kp_conf = kp_results.keypoints.conf[0].cpu().numpy() if kp_results.keypoints.conf is not None else np.ones(len(best_kps))
-
-            conf_thresh = 0.5
-            src_pts = []
-            dst_pts_m = []
-            for idx, ((px, py), conf) in enumerate(zip(best_kps, kp_conf)):
-                if conf >= conf_thresh and idx < len(PITCH_KEYPOINTS_M):
-                    if px > 0 and py > 0:
-                        src_pts.append((float(px), float(py)))
-                        dst_pts_m.append(PITCH_KEYPOINTS_M[idx])
-
-            H = _compute_homography(src_pts, dst_pts_m)
-            if H is not None:
-                H_current = H
-                homographies[kp_frame_num] = H
-
-        cap2.release()
         update_meta("processing", 75)
 
-        # ---- resolve best H per frame ----
-        # For each raw frame, use the most recent available H
-        sorted_kp_frames = sorted(homographies.keys())
-
-        def _get_H_for_frame(fn):
-            """Return the most recent homography computed at or before frame fn."""
-            best = None
-            for kfn in sorted_kp_frames:
-                if kfn <= fn:
-                    best = homographies[kfn]
-                else:
-                    break
-            return best or H_current  # fallback to last known H
+        def _get_H_for_frame(_fn):
+            return None
 
         # ==================================================================
         # Phase 4: Aggregate results
