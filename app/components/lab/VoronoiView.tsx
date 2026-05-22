@@ -105,7 +105,7 @@ export default function VoronoiView({ results, frameIdx }: VizProps) {
       const voronoi = delaunay.voronoi([0, 0, CW, CH])
 
       cellPaths = points.map((p, i) => ({
-        d: voronoi.renderCell(i),
+        d: voronoi.renderCell(i) ?? '',
         team: p.team,
       }))
     } catch {
@@ -139,7 +139,7 @@ export default function VoronoiView({ results, frameIdx }: VizProps) {
         <rect width={CW} height={CH} fill="#0d1f12" />
 
         {/* Voronoi cells (rendered below pitch lines) */}
-        {cellPaths.map((cell, i) => (
+        {cellPaths.filter((cell) => cell.d).map((cell, i) => (
           <path
             key={i}
             d={cell.d}
