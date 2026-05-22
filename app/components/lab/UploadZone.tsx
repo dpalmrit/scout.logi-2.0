@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback, DragEvent, ChangeEvent } from 'react'
+import { useRef, useState, useCallback, useEffect, DragEvent, ChangeEvent } from 'react'
 import { UploadSimple, Warning, CheckCircle } from '@phosphor-icons/react'
 
 interface UploadZoneProps {
@@ -21,8 +21,27 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
   const [uploadingFile, setUploadingFile] = useState<{ name: string; size: number } | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const xhrRef = useRef<XMLHttpRequest | null>(null)
+
+  useEffect(() => {
+    return () => {
+      xhrRef.current?.abort()
+    }
+  }, [])
 
   const handleFile = useCallback(async (file: File) => {
+    const MAX_BYTES = 4 * 1024 * 1024 * 1024 // 4 GB
+    if (!file.type.startsWith('video/')) {
+      setState('error')
+      setErrorMsg('Please upload a video file.')
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setState('error')
+      setErrorMsg('File exceeds the 4 GB limit.')
+      return
+    }
+
     setErrorMsg(null)
     setProgress(0)
     setUploadingFile({ name: file.name, size: file.size })
@@ -58,6 +77,7 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
     let s3Failed = false
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
+      xhrRef.current = xhr
       xhr.open('PUT', uploadUrl)
       xhr.setRequestHeader('Content-Type', file.type || 'video/mp4')
 
@@ -69,16 +89,21 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
+          xhrRef.current = null
           resolve()
         } else {
           reject(new Error(`S3 upload failed (${xhr.status})`))
         }
       }
 
-      xhr.onerror = () => reject(new Error('Network error during S3 upload'))
+      xhr.onerror = () => {
+        xhrRef.current = null
+        reject(new Error('Network error during S3 upload'))
+      }
       xhr.send(file)
     }).catch((err) => {
       s3Failed = true
+      xhrRef.current = null
       setState('error')
       setErrorMsg(err instanceof Error ? err.message : 'Upload to storage failed')
       return Promise.reject(err)

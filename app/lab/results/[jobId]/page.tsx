@@ -77,6 +77,7 @@ export default function ResultsPage({
 }: {
   params: { jobId: string }
 }) {
+  // TODO: Next.js 15 — params becomes Promise<{jobId:string}>; replace with use(params) from React 19
   const { jobId } = params
 
   const [results, setResults] = useState<Results | null>(null)
