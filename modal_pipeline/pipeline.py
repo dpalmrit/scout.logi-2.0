@@ -440,10 +440,12 @@ def run_pipeline_chunk(
     results_bucket: str,
     chunk_idx: int,
     time_offset: float,
+    job_id: str = "",
 ) -> dict:
     """
     Download one video chunk from S3, run detection + tracking + classification,
-    return aggregated result dict. Does NOT write to S3.
+    and write the result JSON to S3 at jobs/<job_id>/chunks/result_<idx>.json
+    so orchestrate can recover if it is preempted.
     """
     import cv2
     import torch
@@ -516,13 +518,25 @@ def run_pipeline_chunk(
         team_assignments = _classify_teams(all_crops, device)
         agg = _aggregate_frames(frames_raw, team_assignments, frame_w, frame_h, chunk_idx)
 
-        return {
+        result = {
             "chunk_idx": chunk_idx,
             "frame_count": len(agg["frames_data"]),
             "duration": round(duration, 3),
             "fps_sampled": round(fps / STRIDE, 3),
             **agg,
         }
+
+        # Write result to S3 so orchestrate can recover from preemption
+        if job_id:
+            result_key = f"jobs/{job_id}/chunks/result_{chunk_idx:03d}.json"
+            s3.put_object(
+                Bucket=results_bucket,
+                Key=result_key,
+                Body=json.dumps(result).encode("utf-8"),
+                ContentType="application/json",
+            )
+
+        return result
 
     finally:
         if os.path.exists(chunk_path):
@@ -634,21 +648,75 @@ def orchestrate(job_id: str, video_s3_key: str, results_bucket: str):
         except Exception:
             pass
 
-        # ── Run all chunks in parallel ─────────────────────────────────────
-        chunk_args = [
-            (chunk_s3_keys[i], results_bucket, i, i * chunk_dur)
+        # ── Spawn all chunks non-blocking; poll S3 for result files ────────
+        # Each chunk writes its own result to S3, so if orchestrate is
+        # preempted and retried, completed chunks are not re-run.
+        import time as _time
+
+        result_s3_keys = [
+            f"jobs/{job_id}/chunks/result_{i:03d}.json"
             for i in range(N_CHUNKS)
         ]
-        chunk_results = list(run_pipeline_chunk.starmap(chunk_args))
 
-        # ── Check for cancellation before writing results ──────────────────
-        try:
-            obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
-            if json.loads(obj["Body"].read()).get("status") == "cancelled":
-                _cleanup_chunks(s3, results_bucket, chunk_s3_keys)
-                return
-        except Exception:
-            pass
+        # Spawn only chunks that don't have an S3 result yet (idempotent on retry)
+        for i in range(N_CHUNKS):
+            already_done = False
+            try:
+                s3.head_object(Bucket=results_bucket, Key=result_s3_keys[i])
+                already_done = True
+            except Exception:
+                pass
+            if not already_done:
+                run_pipeline_chunk.spawn(
+                    chunk_s3_keys[i], results_bucket, i, i * chunk_dur, job_id
+                )
+
+        # Poll until all result files appear (or timeout / cancellation)
+        deadline = _time.time() + 5400  # 90-minute cap
+        while _time.time() < deadline:
+            done_flags = []
+            for key in result_s3_keys:
+                try:
+                    s3.head_object(Bucket=results_bucket, Key=key)
+                    done_flags.append(True)
+                except Exception:
+                    done_flags.append(False)
+
+            n_done = sum(done_flags)
+            update_meta("processing", 15 + int(n_done / N_CHUNKS * 75))
+
+            if n_done == N_CHUNKS:
+                break
+
+            # Check for cancellation
+            try:
+                obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
+                if json.loads(obj["Body"].read()).get("status") == "cancelled":
+                    _cleanup_chunks(s3, results_bucket, chunk_s3_keys)
+                    for key in result_s3_keys:
+                        try:
+                            s3.delete_object(Bucket=results_bucket, Key=key)
+                        except Exception:
+                            pass
+                    return
+            except Exception:
+                pass
+
+            _time.sleep(30)
+
+        # Load chunk results from S3
+        chunk_results = []
+        for key in result_s3_keys:
+            obj = s3.get_object(Bucket=results_bucket, Key=key)
+            chunk_results.append(json.loads(obj["Body"].read()))
+        chunk_results.sort(key=lambda x: x["chunk_idx"])
+
+        # Clean up chunk result files from S3
+        for key in result_s3_keys:
+            try:
+                s3.delete_object(Bucket=results_bucket, Key=key)
+            except Exception:
+                pass
 
         update_meta("processing", 90)
 
