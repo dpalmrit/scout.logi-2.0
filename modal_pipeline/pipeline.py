@@ -323,10 +323,37 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         # ==================================================================
         # Phase 1: Load models
         # ==================================================================
+        import traceback as _tb
         from ultralytics import YOLO as _YOLO
+        import glob as _glob
+        import shutil as _shutil
 
-        # yolov8x.pt downloads from ultralytics CDN automatically
-        player_model = _YOLO(PLAYER_MODEL_SRC)
+        # Clear any stale cached files from previous failed runs
+        for _stale in ("/tmp/player_model.pt", "/tmp/keypoint_model.pt"):
+            if os.path.exists(_stale):
+                print(f"Removing stale file: {_stale}")
+                os.unlink(_stale)
+        for _stale_dir in ("/tmp/player_model", "/tmp/keypoint_model"):
+            if os.path.isdir(_stale_dir):
+                print(f"Removing stale dir: {_stale_dir}")
+                _shutil.rmtree(_stale_dir)
+
+        # Clear ultralytics model cache to force fresh download
+        _yolo_cache = os.path.expanduser("~/.config/Ultralytics")
+        if os.path.isdir(_yolo_cache):
+            print(f"Ultralytics settings dir: {_yolo_cache}")
+            for _f in _glob.glob(f"{_yolo_cache}/**/*.pt", recursive=True):
+                print(f"  cached model: {_f}")
+
+        print(f"Loading model: {PLAYER_MODEL_SRC}")
+        try:
+            player_model = _YOLO(PLAYER_MODEL_SRC)
+        except Exception as _e:
+            print(f"Model load error: {_e}")
+            print(_tb.format_exc())
+            raise
+
+        print("Model loaded successfully")
         update_meta("processing", 5)
 
         # ==================================================================
