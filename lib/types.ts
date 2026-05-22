@@ -3,7 +3,7 @@ export interface Job {
   userId: string
   filename: string
   videoKey: string
-  status: 'queued' | 'processing' | 'done' | 'error'
+  status: 'queued' | 'processing' | 'done' | 'error' | 'cancelled'
   progress: number
   createdAt: string
   completedAt?: string

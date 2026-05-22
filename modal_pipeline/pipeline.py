@@ -613,12 +613,30 @@ def orchestrate(job_id: str, video_s3_key: str, results_bucket: str):
 
         update_meta("processing", 15)
 
+        # ── Check for cancellation before spinning up GPU containers ──────
+        try:
+            obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
+            current = json.loads(obj["Body"].read())
+            if current.get("status") == "cancelled":
+                return
+        except Exception:
+            pass
+
         # ── Run all chunks in parallel ─────────────────────────────────────
         chunk_args = [
             (chunk_s3_keys[i], results_bucket, i, i * chunk_dur)
             for i in range(N_CHUNKS)
         ]
         chunk_results = list(run_pipeline_chunk.starmap(chunk_args))
+
+        # ── Check for cancellation before writing results ──────────────────
+        try:
+            obj = s3.get_object(Bucket=results_bucket, Key=f"jobs/{job_id}/meta.json")
+            current = json.loads(obj["Body"].read())
+            if current.get("status") == "cancelled":
+                return
+        except Exception:
+            pass
 
         update_meta("processing", 90)
 

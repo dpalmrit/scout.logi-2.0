@@ -104,7 +104,13 @@ export default function ResultsPage({
         if (cancelled) return
 
         if (urlRes.status === 409) {
-          setNotReady(true)
+          // 409 = job not done yet OR cancelled
+          const body = await urlRes.json().catch(() => ({}))
+          if (body?.cancelled) {
+            setError('This analysis was cancelled.')
+          } else {
+            setNotReady(true)
+          }
           setLoading(false)
           return
         }

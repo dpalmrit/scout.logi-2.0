@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { getJob, presignedGetUrl } from '@/lib/s3'
+import { getJob, putJob } from '@/lib/s3'
 
-export async function GET(
+export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -21,21 +21,11 @@ export async function GET(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  if (job.status === 'cancelled') {
-    return NextResponse.json({ error: 'Analysis was cancelled', cancelled: true }, { status: 409 })
+  if (job.status === 'done' || job.status === 'cancelled') {
+    return NextResponse.json({ error: 'Job already finished' }, { status: 409 })
   }
 
-  if (job.status !== 'done') {
-    return NextResponse.json({ error: 'Results not ready' }, { status: 409 })
-  }
+  await putJob({ ...job, status: 'cancelled' })
 
-  const resultsKey = job.resultsKey ?? `jobs/${job.id}/results.json`
-
-  if (!resultsKey.startsWith('jobs/')) {
-    return NextResponse.json({ error: 'Invalid results key' }, { status: 500 })
-  }
-
-  const url = await presignedGetUrl(resultsKey)
-
-  return NextResponse.json({ url })
+  return NextResponse.json({ ok: true })
 }

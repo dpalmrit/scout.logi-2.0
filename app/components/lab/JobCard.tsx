@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Clock, CheckCircle, Warning, Spinner } from '@phosphor-icons/react'
+import { ArrowRight, Clock, CheckCircle, Warning, Spinner, X, Prohibit } from '@phosphor-icons/react'
 import type { Job } from '@/lib/types'
 
 interface JobCardProps {
@@ -26,6 +26,7 @@ function relativeTime(isoString: string): string {
 
 export default function JobCard({ job: initialJob }: JobCardProps) {
   const [job, setJob] = useState<Job>(initialJob)
+  const [cancelling, setCancelling] = useState(false)
 
   // Keep local state in sync when parent re-renders with fresh data
   useEffect(() => {
@@ -57,6 +58,20 @@ export default function JobCard({ job: initialJob }: JobCardProps) {
     return () => clearInterval(interval)
   }, [job.id, job.status])
 
+  async function handleCancel() {
+    setCancelling(true)
+    try {
+      const res = await fetch(`/api/jobs/${job.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setJob((prev) => ({ ...prev, status: 'cancelled' }))
+      }
+    } catch {
+      // silently ignore
+    } finally {
+      setCancelling(false)
+    }
+  }
+
   const statusBadge = () => {
     switch (job.status) {
       case 'queued':
@@ -85,6 +100,13 @@ export default function JobCard({ job: initialJob }: JobCardProps) {
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/15 text-red-400 text-xs font-medium">
             <Warning size={12} weight="bold" />
             Error
+          </span>
+        )
+      case 'cancelled':
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium">
+            <Prohibit size={12} weight="bold" />
+            Cancelled
           </span>
         )
     }
@@ -120,17 +142,29 @@ export default function JobCard({ job: initialJob }: JobCardProps) {
         </p>
       )}
 
-      {/* Footer row: time + results link */}
+      {/* Footer row: time + actions */}
       <div className="flex items-center justify-between gap-2 mt-1">
         <span className="text-white/30 text-xs">{relativeTime(job.createdAt)}</span>
-        {job.status === 'done' && (
-          <Link
-            href={`/lab/results/${job.id}`}
-            className="flex items-center gap-1 text-[#00e676] text-xs font-medium hover:underline"
-          >
-            View Results <ArrowRight size={12} weight="bold" />
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          {(job.status === 'queued' || job.status === 'processing') && (
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="flex items-center gap-1 text-white/30 text-xs hover:text-red-400 transition-colors disabled:opacity-40"
+            >
+              <X size={12} weight="bold" />
+              {cancelling ? 'Cancelling…' : 'Cancel'}
+            </button>
+          )}
+          {job.status === 'done' && (
+            <Link
+              href={`/lab/results/${job.id}`}
+              className="flex items-center gap-1 text-[#00e676] text-xs font-medium hover:underline"
+            >
+              View Results <ArrowRight size={12} weight="bold" />
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )
