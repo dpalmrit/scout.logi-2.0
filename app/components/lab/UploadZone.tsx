@@ -55,6 +55,7 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
     }
 
     // Step 2: PUT the file directly to S3 via XHR (for upload progress)
+    let s3Failed = false
     await new Promise<void>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open('PUT', uploadUrl)
@@ -77,12 +78,13 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
       xhr.onerror = () => reject(new Error('Network error during S3 upload'))
       xhr.send(file)
     }).catch((err) => {
+      s3Failed = true
       setState('error')
       setErrorMsg(err instanceof Error ? err.message : 'Upload to storage failed')
       return Promise.reject(err)
     })
 
-    if (state === 'error') return
+    if (s3Failed) return
 
     // Step 3: Start the pipeline
     try {
@@ -102,7 +104,7 @@ export default function UploadZone({ onUploadComplete }: UploadZoneProps) {
     setProgress(0)
     setUploadingFile(null)
     onUploadComplete(jobId)
-  }, [onUploadComplete, state])
+  }, [onUploadComplete])
 
   const onDrop = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
