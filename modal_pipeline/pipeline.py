@@ -206,7 +206,14 @@ def _classify_teams(all_crops: dict, device: str) -> dict:
             batch = pil_images[i : i + batch_size]
             inputs = processor(images=batch, return_tensors="pt", padding=True).to(device)
             outputs = model.get_image_features(**inputs)
-            embeddings.append(outputs.cpu().float().numpy())
+            # transformers >= 5.x may return ModelOutput; extract the tensor
+            if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
+                feats = outputs.pooler_output
+            elif hasattr(outputs, "last_hidden_state"):
+                feats = outputs.last_hidden_state[:, 0, :]
+            else:
+                feats = outputs  # raw tensor (older transformers)
+            embeddings.append(feats.cpu().float().numpy())
 
     embeddings_np = np.vstack(embeddings)  # (N, D)
 
