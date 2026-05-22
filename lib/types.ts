@@ -37,3 +37,9 @@ export interface Results {
     territory: [number, number]
   }
 }
+
+export interface VizProps {
+  results: Results
+  frameIdx: number
+  onFrameChange: (idx: number) => void
+}

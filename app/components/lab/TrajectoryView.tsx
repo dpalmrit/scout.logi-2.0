@@ -1,12 +1,6 @@
 'use client'
 
-import type { Results } from '@/lib/types'
-
-type VizProps = {
-  results: Results
-  frameIdx: number
-  onFrameChange: (idx: number) => void
-}
+import type { VizProps } from '@/lib/types'
 
 // Canvas logical size — 10px per metre (105m × 68m pitch)
 const CW = 1050
@@ -141,7 +135,8 @@ export default function TrajectoryView({ results, frameIdx, onFrameChange }: Viz
       {sampled.length > 1 &&
         sampled.slice(0, -1).map((pt, i) => {
           const next = sampled[i + 1]
-          const opacity = (i / (total - 1)) * 0.9 + 0.1
+          const denom = total > 1 ? total - 1 : 1
+          const opacity = (i / denom) * 0.9 + 0.1
           return (
             <line
               key={i}

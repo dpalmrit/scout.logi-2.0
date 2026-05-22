@@ -1,13 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { Results } from '@/lib/types'
-
-type VizProps = {
-  results: Results
-  frameIdx: number
-  onFrameChange: (idx: number) => void
-}
+import type { VizProps } from '@/lib/types'
 
 // Canvas logical size — 10px per metre (105m × 68m pitch)
 const CW = 1050
