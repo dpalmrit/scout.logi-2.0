@@ -53,8 +53,8 @@ image = (
         "umap-learn>=0.5",
         "opencv-python-headless>=4.9",
         "numpy>=1.26",
-        "roboflow-sports",
         "Pillow>=10.0",
+        "fastapi[standard]>=0.100",
     )
 )
 
@@ -627,8 +627,10 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
 # Non-blocking web endpoint
 # ---------------------------------------------------------------------------
 
-@app.function(image=modal.Image.debian_slim())
-@modal.web_endpoint(method="POST")
+trigger_image = modal.Image.debian_slim().pip_install("fastapi[standard]>=0.100", "boto3>=1.34")
+
+@app.function(image=trigger_image, secrets=[modal.Secret.from_name("aws-credentials")])
+@modal.fastapi_endpoint(method="POST")
 def trigger(body: dict):
     """
     Non-blocking HTTP POST endpoint.
