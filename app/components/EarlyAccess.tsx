@@ -27,13 +27,6 @@ export default function EarlyAccess() {
               <p className="leading-relaxed mb-8 max-w-[420px]" style={{ color: '#7a9982' }}>
                 PitchScout AI is launching ahead of the fall season. Join the list and we'll reach out with priority access — free to try, no commitment required.
               </p>
-              <a
-                href="https://pitchscout.ai/coach-register"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 bg-[#00e676] text-[#080f0a] hover:bg-[#26f078] hover:-translate-y-[1px] active:scale-[0.98]"
-                style={{ textDecoration: 'none' }}
-              >
-                Request access <ArrowRight size={15} weight="bold" />
-              </a>
             </div>
           </ScrollReveal>
 

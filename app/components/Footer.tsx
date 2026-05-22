@@ -1,7 +1,5 @@
 export default function Footer() {
   const links = [
-    { href: 'https://pitchscout.ai/privacy', label: 'Privacy policy' },
-    { href: 'https://pitchscout.ai/privacy#data-handling', label: 'How we handle data' },
     { href: 'mailto:support@pitchscout.ai', label: 'Contact' },
   ]
 
@@ -9,7 +7,7 @@ export default function Footer() {
     <footer className="relative z-10 border-t" style={{ borderColor: 'rgba(0,230,118,0.07)' }}>
       <div className="max-w-[1100px] mx-auto px-8 md:px-12 py-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
         <a
-          href="https://pitchscout.ai/"
+          href="/"
           className="font-bold text-base tracking-widest uppercase"
           style={{ color: '#00e676', textDecoration: 'none' }}
         >

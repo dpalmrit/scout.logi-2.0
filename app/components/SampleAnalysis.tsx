@@ -148,17 +148,6 @@ export default function SampleAnalysis() {
           })}
         </div>
 
-        <ScrollReveal delay={300}>
-          <div className="text-center">
-            <a
-              href="https://pitchscout.ai/coach-register"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded font-bold tracking-wide uppercase transition-all duration-300 bg-[#00e676] text-[#080f0a] hover:bg-[#26f078] hover:-translate-y-[1px] active:scale-[0.98]"
-              style={{ textDecoration: 'none' }}
-            >
-              Get this for your team
-            </a>
-          </div>
-        </ScrollReveal>
       </div>
     </section>
   )
