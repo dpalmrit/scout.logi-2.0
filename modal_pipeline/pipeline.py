@@ -49,6 +49,7 @@ image = (
         "torch",
         "torchvision",
         "transformers>=4.40",
+        "sentencepiece>=0.1.99",
         "scikit-learn>=1.4",
         "umap-learn>=0.5",
         "opencv-python-headless>=4.9",
