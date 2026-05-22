@@ -46,6 +46,7 @@ image = (
         "ultralytics>=8.3",
         "supervision>=0.25",
         "boto3>=1.34",
+        "requests>=2.31",
         "torch",
         "torchvision",
         "transformers>=4.40",
@@ -55,7 +56,6 @@ image = (
         "numpy>=1.26",
         "Pillow>=10.0",
         "fastapi[standard]>=0.100",
-        "roboflow>=1.1",
     )
 )
 
@@ -315,32 +315,48 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         update_meta("processing", 2)
 
         # ==================================================================
-        # Phase 1: Load models (download from Roboflow Hub, run with ultralytics)
+        # Phase 1: Load models (download trained weights from Roboflow API)
         # ==================================================================
-        import roboflow as _rf_pkg
+        import requests as _req
         from ultralytics import YOLO as _YOLO
 
         _rf_key = os.environ["ROBOFLOW_API_KEY"]
-        _rf = _rf_pkg.Roboflow(api_key=_rf_key)
 
-        _ws = _rf.workspace(PLAYER_MODEL_RF[0])
-        _ws.project(PLAYER_MODEL_RF[1]).version(PLAYER_MODEL_RF[2]).download(
-            "yolov8", location="/tmp/player_model", overwrite=True
-        )
-        _ws.project(KEYPOINT_MODEL_RF[1]).version(KEYPOINT_MODEL_RF[2]).download(
-            "yolov8", location="/tmp/keypoint_model", overwrite=True
-        )
+        def _download_rf_weights(workspace, project, version, dest_path):
+            """Download trained YOLOv8 .pt weights from Roboflow."""
+            for fmt in ("yolov8pytorch", "yolov8"):
+                resp = _req.get(
+                    f"https://api.roboflow.com/{workspace}/{project}/{version}/{fmt}",
+                    params={"api_key": _rf_key},
+                    timeout=30,
+                ).json()
+                print(f"Roboflow API [{fmt}] keys: {list(resp.keys())}")
 
-        import glob as _glob
+                # response may nest link under 'model', 'export', or at root
+                link = (
+                    (resp.get("model") or {}).get("link")
+                    or (resp.get("export") or {}).get("link")
+                    or resp.get("link")
+                )
+                if not link:
+                    print(f"  → no link for format {fmt}, trying next")
+                    continue
 
-        def _find_pt(base):
-            hits = _glob.glob(f"{base}/**/*.pt", recursive=True) or _glob.glob(f"{base}/*.pt")
-            if not hits:
-                raise FileNotFoundError(f"No .pt file found under {base}")
-            return sorted(hits)[0]
+                r = _req.get(link, stream=True, timeout=300)
+                r.raise_for_status()
+                with open(dest_path, "wb") as f:
+                    for chunk in r.iter_content(65536):
+                        f.write(chunk)
+                print(f"  → downloaded {dest_path} ({os.path.getsize(dest_path)} bytes)")
+                return
 
-        player_model = _YOLO(_find_pt("/tmp/player_model"))
-        keypoint_model = _YOLO(_find_pt("/tmp/keypoint_model"))
+            raise ValueError(f"Could not obtain model weights for {workspace}/{project}/{version}. Last response: {resp}")
+
+        _download_rf_weights(*PLAYER_MODEL_RF, "/tmp/player_model.pt")
+        _download_rf_weights(*KEYPOINT_MODEL_RF, "/tmp/keypoint_model.pt")
+
+        player_model = _YOLO("/tmp/player_model.pt")
+        keypoint_model = _YOLO("/tmp/keypoint_model.pt")
         update_meta("processing", 5)
 
         # ==================================================================
