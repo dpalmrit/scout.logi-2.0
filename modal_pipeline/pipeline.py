@@ -377,6 +377,7 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
         frames_raw = []       # [{frame_num, detections, ball_xy_img}]
         all_crops = {}        # {tracker_id: [crop_bgr, ...]}
         frame_num = 0
+        frame_w, frame_h = 1920, 1080  # defaults; updated on first frame
 
         while True:
             ret, frame = cap.read()
@@ -386,6 +387,9 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
             frame_num += 1
             if frame_num % STRIDE != 0:
                 continue
+
+            if frame_num == STRIDE:
+                frame_h, frame_w = frame.shape[:2]
 
             # Player / ball detection
             results = player_model(frame, imgsz=1280, verbose=False)[0]
@@ -512,7 +516,9 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
                     except Exception:
                         pitch_x = pitch_y = None
                 else:
-                    pitch_x = pitch_y = None
+                    # Normalise image coords to pitch-scale as approximation
+                    pitch_x = p["img_cx"] / frame_w * PITCH_WIDTH_M
+                    pitch_y = p["img_cy"] / frame_h * PITCH_HEIGHT_M
 
                 frame_players.append(
                     {
@@ -524,28 +530,31 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
                     }
                 )
 
-                if pitch_x is not None and pitch_y is not None:
-                    frame_team_positions[team].append((pitch_x, pitch_y))
-                    team_territory[team] += pitch_x  # crude territory metric
+                frame_team_positions[team].append((pitch_x, pitch_y))
+                team_territory[team] += pitch_x
 
-                    # Distance accumulation
-                    if tid in player_last_pos:
-                        lx, ly = player_last_pos[tid]
-                        d = ((pitch_x - lx) ** 2 + (pitch_y - ly) ** 2) ** 0.5
-                        # Scale: each frame is STRIDE frames apart
-                        player_distances.setdefault(tid, {"team": team, "metres": 0.0})
-                        player_distances[tid]["metres"] += d
-                    player_last_pos[tid] = (pitch_x, pitch_y)
+                # Distance accumulation
+                if tid in player_last_pos:
+                    lx, ly = player_last_pos[tid]
+                    d = ((pitch_x - lx) ** 2 + (pitch_y - ly) ** 2) ** 0.5
+                    player_distances.setdefault(tid, {"team": team, "metres": 0.0})
+                    player_distances[tid]["metres"] += d
+                player_last_pos[tid] = (pitch_x, pitch_y)
 
             # Ball pitch position
             ball_pitch = None
-            if fr["ball_xy_img"] and H is not None:
+            if fr["ball_xy_img"]:
                 try:
                     bx, by = fr["ball_xy_img"]
-                    pt = np.array([[[bx, by]]], dtype=np.float32)
-                    out = cv2.perspectiveTransform(pt, H)
-                    bpx = float(np.clip(out[0][0][0], 0.0, PITCH_WIDTH_M))
-                    bpy = float(np.clip(out[0][0][1], 0.0, PITCH_HEIGHT_M))
+                    if H is not None:
+                        import cv2 as _cv2
+                        pt = np.array([[[bx, by]]], dtype=np.float32)
+                        out = _cv2.perspectiveTransform(pt, H)
+                        bpx = float(np.clip(out[0][0][0], 0.0, PITCH_WIDTH_M))
+                        bpy = float(np.clip(out[0][0][1], 0.0, PITCH_HEIGHT_M))
+                    else:
+                        bpx = bx / frame_w * PITCH_WIDTH_M
+                        bpy = by / frame_h * PITCH_HEIGHT_M
                     ball_pitch = {"pitch_x": bpx, "pitch_y": bpy}
                     ball_positions_pitch.append([bpx, bpy])
 
@@ -558,7 +567,7 @@ def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
                             if d < nearest_dist:
                                 nearest_dist = d
                                 nearest_team = team_id
-                    if nearest_team is not None and nearest_dist < 5.0:  # within 5m
+                    if nearest_team is not None and nearest_dist < 5.0:
                         team_ball_frames[nearest_team] += 1
                 except Exception:
                     pass
