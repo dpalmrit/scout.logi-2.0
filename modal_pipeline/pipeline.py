@@ -266,7 +266,7 @@ def _compute_homography(src_pts, dst_pts_m):
     image=image,
     gpu="T4",
     timeout=10800,  # 3 hours
-    secrets=[modal.Secret.from_name("aws-credentials")],
+    secrets=[modal.Secret.from_name("aws-credentials"), modal.Secret.from_name("roboflow-credentials")],
 )
 def run_pipeline(job_id: str, video_s3_key: str, results_bucket: str):
     """Run the full CV pipeline for a single match video."""
