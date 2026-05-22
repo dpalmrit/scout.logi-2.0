@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, CircleNotch } from '@phosphor-icons/react'
 import type { Results } from '@/lib/types'
 import RadarCanvas from '@/app/components/lab/RadarCanvas'
+import VoronoiView from '@/app/components/lab/VoronoiView'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -176,7 +177,7 @@ export default function ResultsPage({
       case 'radar':
         return <RadarCanvas {...vizProps} />
       case 'voronoi':
-        return <VoronoiStub {...vizProps} />
+        return <VoronoiView {...vizProps} />
       case 'trajectory':
         return <TrajectoryStub {...vizProps} />
       case 'stats':
